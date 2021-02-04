@@ -11,9 +11,9 @@
 """
 
 import numpy as np
-from ...common.gp import GP
-from ...common.hdf5.dataset_h5 import Dataset_h5
-from ..aco_grad import GradACO
+from ..common.gp import GP
+from ..common.dataset_h5 import Dataset_h5
+from .aco_grad import GradACO
 
 
 class GradACO_h5(GradACO):

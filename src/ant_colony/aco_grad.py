@@ -14,10 +14,8 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 import numpy as np
 from numpy import random as rand
-#import matplotlib.pyplot as plt
 from ..common.gp import GI, GP
 from ..common.dataset_bfs import Dataset
-#from src.algorithms.common.cython.cyt_dataset import Dataset
 
 
 class GradACO:
@@ -145,31 +143,6 @@ class GradACO:
             return pattern
         else:
             return gen_pattern
-
-    def plot_pheromone_matrix(self):
-        x_plot = np.array(self.p_matrix)
-        print(x_plot)
-        # Figure size (width, height) in inches
-        # plt.figure(figsize=(4, 4))
-        plt.title("+: increasing; -: decreasing; x: irrelevant")
-        # plt.xlabel("+: increasing; -: decreasing; x: irrelevant")
-        # plt.ylabel('Attribute')
-        plt.xlim(0, 3)
-        plt.ylim(0, len(self.p_matrix))
-        x = [0, 1, 2]
-        y = []
-        for i in range(len(self.d_set.title)):
-            y.append(i)
-            plt.text(-0.3, (i+0.5), self.d_set.title[i][1][:3])
-        plt.xticks(x, [])
-        plt.yticks(y, [])
-        plt.text(0.5, -0.4, '+')
-        plt.text(1.5, -0.4, '-')
-        plt.text(2.5, -0.4, 'x')
-        plt.pcolor(-x_plot, cmap='gray')
-        plt.gray()
-        plt.grid()
-        plt.show()
 
     @staticmethod
     def check_anti_monotony(lst_p, pattern, subset=True):
