@@ -14,8 +14,8 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 import numpy as np
 from numpy import random as rand
-from common.gp import GI, GP
-from common.dataset_bfs import Dataset
+from ..common.gp import GI, GP
+from ..common.dataset_bfs import Dataset
 
 
 class GradACO:
