@@ -18,6 +18,7 @@ import csv
 from dateutil.parser import parse
 import time
 import numpy as np
+from numpy.core._multiarray_umath import ndarray
 
 
 class Dataset:
@@ -92,3 +93,55 @@ class Dataset:
             return np.array(time_cols)
         else:
             return np.array([])
+
+    def convert_data_to_array(self, data, has_title=False):
+        # convert csv data into array
+        title: ndarray = np.array([])
+        if has_title:
+            keys = np.arange(len(data[0]))
+            values = np.array(data[0], dtype='S')
+            title = np.rec.fromarrays((keys, values), names=('key', 'value'))
+            data = np.delete(data, 0, 0)
+        # convert csv data into array
+        self.data = np.asarray(data)
+        return title
+
+    @staticmethod
+    def read_csv(file):
+        # 1. retrieve data-set from file
+        with open(file, 'r') as f:
+            dialect = csv.Sniffer().sniff(f.readline(), delimiters=";,' '\t")
+            f.seek(0)
+            reader = csv.reader(f, dialect)
+            temp = list(reader)
+            f.close()
+        return temp
+
+    @staticmethod
+    def test_time(date_str):
+        # add all the possible formats
+        try:
+            if type(int(date_str)):
+                return False, False
+        except ValueError:
+            try:
+                if type(float(date_str)):
+                    return False, False
+            except ValueError:
+                try:
+                    date_time = parse(date_str)
+                    t_stamp = time.mktime(date_time.timetuple())
+                    return True, t_stamp
+                except ValueError:
+                    raise ValueError('no valid date-time format found')
+
+    @staticmethod
+    def get_timestamp(time_data):
+        try:
+            ok, stamp = Dataset.test_time(time_data)
+            if ok:
+                return stamp
+            else:
+                return False
+        except ValueError:
+            return False
