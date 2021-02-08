@@ -37,7 +37,7 @@ def init_algorithm(f_path, min_supp, cores, eq=False):
 
         wr_line = "Algorithm: ACO-GRAANK HF5\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.cols_count) + '\n'
-        wr_line += "No. of (dataset) tuples: " + str(ac.d_set.data_size) + '\n'
+        wr_line += "No. of (dataset) tuples: " + str(ac.d_set.rows_count) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
         # wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
     wr_text = ("Run-time: " + str(end - start) + " seconds\n")
     # wr_text += (Profile.get_quick_mem_use(snapshot) + "\n")
-    wr_text += str(res_text)
-    f_name = str('res_acoh5' + str(end).replace('.', '', 1) + '.txt')
+    # wr_text += str(res_text)
+    # f_name = str('res_acoh5' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
     print(wr_text)

@@ -37,7 +37,7 @@ class Dataset:
             self.data = np.array([])
             self.titles = self.get_titles(data)
             self.cols_count = self.get_cols_count()
-            self.data_size = self.get_size()
+            self.rows_count = self.get_size()
             self.time_cols = self.get_time_cols()
             self.attr_cols = self.get_attr_cols()
             # self.no_bins = False
@@ -51,15 +51,15 @@ class Dataset:
     def get_titles(self, data):
         # data = self.raw_data
         if data[0][0].replace('.', '', 1).isdigit() or data[0][0].isdigit():
-            title = self.convert_data_to_array(data)
-            return title
+            titles = self.convert_data_to_array(data)
+            return titles
         else:
             if data[0][1].replace('.', '', 1).isdigit() or data[0][1].isdigit():
-                title = self.convert_data_to_array(data)
-                return title
+                titles = self.convert_data_to_array(data)
+                return titles
             else:
-                title = self.convert_data_to_array(data, has_title=True)
-                return title
+                titles = self.convert_data_to_array(data, has_title=True)
+                return titles
 
     def get_size(self):
         size = self.data.shape[0]
@@ -96,15 +96,92 @@ class Dataset:
 
     def convert_data_to_array(self, data, has_title=False):
         # convert csv data into array
-        title: ndarray = np.array([])
+        titles: ndarray = np.array([])
         if has_title:
             keys = np.arange(len(data[0]))
             values = np.array(data[0], dtype='S')
-            title = np.rec.fromarrays((keys, values), names=('key', 'value'))
+            titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
             data = np.delete(data, 0, 0)
         # convert csv data into array
         self.data = np.asarray(data)
-        return title
+        return titles
+
+    def init_gp_attributes(self):
+        # (check) implement parallel multiprocessing
+        # transpose csv array data
+        attr_data = self.data.copy().T
+        # self.attr_size = len(attr_data[self.attr_cols[0]])
+        # construct and store 1-item_set valid bins
+        self.construct_bins(attr_data)
+        attr_data = None
+
+    def construct_bins(self, attr_data):
+        ##print(self.data)
+        print("\n")
+        #print(attr_data)
+        #print("\n\n\n\n")
+
+        # generate tuple indices
+        n = self.rows_count #* 500
+
+        #from itertools import product
+        #ind = [[x, y] for x, y in product(range(n), range(n))]
+        #arr_n = np.arange(n)
+        #ind =
+        #print(arr_n)
+        #ind = [[i, j] for i in range(n) for j in range(i+1, n)]
+        #print(ind)
+        # print(len(ind))
+
+        col_data = attr_data[2]
+        print(col_data)
+        arr_bin = [col_data[i] > col_data[j] for i in range(n) for j in range(i+1, n)]
+        supp = float(np.sum(arr_bin)) / float(n * (n - 1.0) / 2.0)
+        print(arr_bin)
+        print(len(arr_bin))
+        print("Support: " + str(supp))
+
+        #temp_pos = Dataset.bin_rank(col_data, equal=self.equal)
+        #supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
+        #print(temp_pos)
+        #print(len(temp_pos))
+        #print("Support: " + str(supp))
+
+    def construct_bins_old(self, attr_data):
+        # execute binary rank to calculate support of pattern
+        # valid_bins = list()  # numpy is very slow for append operations
+        # n = self.attr_size
+        n = self.rows_count
+        valid_bins = list()
+        invalid_bins = list()
+        for col in self.attr_cols:
+            col_data = np.array(attr_data[col], dtype=float)
+            incr = np.array((col, '+'), dtype='i, S1')
+            decr = np.array((col, '-'), dtype='i, S1')
+            temp_pos = Dataset.bin_rank(col_data, equal=self.equal)
+            supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
+            if supp < self.thd_supp:
+                invalid_bins.append(incr)
+                invalid_bins.append(decr)
+            else:
+                valid_bins.append(np.array([incr.tolist(), temp_pos], dtype=object))
+                valid_bins.append(np.array([decr.tolist(), temp_pos.T], dtype=object))
+        print(np.array(valid_bins))
+        # self.valid_bins = np.array(valid_bins)
+        # self.invalid_bins = np.array(invalid_bins)
+        # if len(self.valid_bins) < 3:
+        #    self.no_bins = True
+
+    @staticmethod
+    def bin_rank(arr, equal=False):
+        print(arr)
+        with np.errstate(invalid='ignore'):
+            if not equal:
+                temp_pos = arr < arr[:, np.newaxis]
+            else:
+                temp_pos = arr <= arr[:, np.newaxis]
+                np.fill_diagonal(temp_pos, 0)
+            return temp_pos
 
     @staticmethod
     def read_csv(file):
