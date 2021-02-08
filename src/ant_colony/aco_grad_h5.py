@@ -20,9 +20,9 @@ from common.dataset import Dataset
 
 class GradACO:
 
-    def __init__(self, f_path, min_supp):
+    def __init__(self, f_path, min_supp, segs):
         self.d_set = Dataset(f_path, min_supp)
-        self.d_set.init_gp_attributes()
+        self.d_set.init_gp_attributes(segs)
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)

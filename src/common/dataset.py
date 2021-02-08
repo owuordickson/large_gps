@@ -39,12 +39,13 @@ class Dataset:
             self.row_count = self.get_size()
             self.time_cols = self.get_time_cols()
             self.attr_cols = self.get_attr_cols()
-            # self.no_bins = False
+            self.no_bins = False
+            self.seg_count = 1
             # self.attr_size = 0
             # self.step_name = ''
-            # self.invalid_bins = np.array([])
-            # self.valid_bins = np.array([])
-            # data = None
+            self.invalid_bins = np.array([])
+            self.valid_bins = np.array([])
+            data = None
             # self.init_attributes()
 
     def get_titles(self, data):
@@ -105,13 +106,13 @@ class Dataset:
         self.data = np.asarray(data)
         return titles
 
-    def init_gp_attributes(self):
+    def init_gp_attributes(self, seg_no):
         # (check) implement parallel multiprocessing
         # transpose csv array data
         attr_data = self.data.copy().T
         # self.attr_size = len(attr_data[self.attr_cols[0]])
         # construct and store 1-item_set valid bins
-        self.construct_bins_old(attr_data)
+        self.construct_bins_new(attr_data, seg_no)
         attr_data = None
 
     def construct_bins(self, attr_data):
@@ -178,7 +179,7 @@ class Dataset:
         #print(len(temp_pos))
         #print("Support: " + str(supp))
 
-    def construct_bins_old(self, attr_data):
+    def construct_bins_new(self, attr_data, seg_no):
         # execute binary rank to calculate support of pattern
         # valid_bins = list()  # numpy is very slow for append operations
         # n = self.attr_size
@@ -189,8 +190,7 @@ class Dataset:
             col_data = np.array(attr_data[col], dtype=float)
             incr = np.array((col, '+'), dtype='i, S1')
             decr = np.array((col, '-'), dtype='i, S1')
-            arr_pos, arr_neg = self.bin_rank(col_data, 2)
-            # supp = float(np.sum(arr_pos)) / float(n * (n - 1.0) / 2.0)  # TO BE REMOVED
+            arr_pos, arr_neg = self.bin_rank(col_data, seg_no)
             if arr_pos is None:
                 invalid_bins.append(incr)
             else:
@@ -200,10 +200,12 @@ class Dataset:
             else:
                 valid_bins.append(np.array([decr.tolist(), arr_neg], dtype=object))
         print(valid_bins)
-        # self.valid_bins = np.array(valid_bins)
-        # self.invalid_bins = np.array(invalid_bins)
-        # if len(self.valid_bins) < 3:
-        #    self.no_bins = True
+        self.valid_bins = np.array(valid_bins)
+        self.invalid_bins = np.array(invalid_bins)
+        if len(self.valid_bins) < 3:
+            self.no_bins = True
+        else:
+            self.seg_count = self.valid_bins[0][1][0].size
 
     def bin_rank(self, arr, seg_no):
         n = self.row_count
@@ -214,7 +216,6 @@ class Dataset:
         lst_neg_sum = []
         with np.errstate(invalid='ignore'):
             for i in range(0, n, step):
-                # temp_pos = arr < arr[:, np.newaxis]  # TO BE REMOVED
                 if i == 0:
                     bin_neg = arr < arr[:step, np.newaxis]
                     bin_pos = arr > arr[:step, np.newaxis]
@@ -239,15 +240,7 @@ class Dataset:
                 lst_pos = None
             else:
                 lst_pos = [np.array(lst_pos_sum, dtype=int), np.array(lst_pos, dtype=object)]
-
-            print(lst_pos)
-            print("\n")
-            #print(temp_pos)
-            print(str(sup_pos) + ', ' + str(sup_neg))
-            print("------\n")
-
             return lst_pos, lst_neg
-            # return temp_pos
 
     @staticmethod
     def read_csv(file):
