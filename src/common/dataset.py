@@ -212,6 +212,17 @@ class Dataset:
             else:
                 temp_pos = arr <= arr[:, np.newaxis]
                 np.fill_diagonal(temp_pos, 0)
+
+            temp1 = arr < arr[:2, np.newaxis]
+            np.fill_diagonal(temp1, 0)
+            temp2 = arr < arr[2:, np.newaxis]
+            np.fill_diagonal(temp1, 0)
+            print(temp1)
+            print("\n")
+            print(temp2)
+            print("\n")
+            print(temp_pos)
+            print("------\n")
             return temp_pos
 
     @staticmethod
