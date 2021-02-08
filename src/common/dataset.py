@@ -189,15 +189,17 @@ class Dataset:
             col_data = np.array(attr_data[col], dtype=float)
             incr = np.array((col, '+'), dtype='i, S1')
             decr = np.array((col, '-'), dtype='i, S1')
-            temp_pos = self.bin_rank(col_data, 3)
-            supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
-            if supp < self.thd_supp:
+            arr_pos, arr_neg = self.bin_rank(col_data, 2)
+            # supp = float(np.sum(arr_pos)) / float(n * (n - 1.0) / 2.0)  # TO BE REMOVED
+            if arr_pos is None:
                 invalid_bins.append(incr)
+            else:
+                valid_bins.append(np.array([incr.tolist(), arr_pos], dtype=object))
+            if arr_neg is None:
                 invalid_bins.append(decr)
             else:
-                valid_bins.append(np.array([incr.tolist(), temp_pos], dtype=object))
-                valid_bins.append(np.array([decr.tolist(), temp_pos.T], dtype=object))
-        print(len(valid_bins))
+                valid_bins.append(np.array([decr.tolist(), arr_neg], dtype=object))
+        print(valid_bins)
         # self.valid_bins = np.array(valid_bins)
         # self.invalid_bins = np.array(invalid_bins)
         # if len(self.valid_bins) < 3:
@@ -206,25 +208,46 @@ class Dataset:
     def bin_rank(self, arr, seg_no):
         n = self.row_count
         step = int(self.row_count / seg_no)
-        lst_temp = []
+        lst_pos = []
+        lst_neg = []
+        lst_pos_sum = []
+        lst_neg_sum = []
         with np.errstate(invalid='ignore'):
             for i in range(0, n, step):
-                temp_pos = arr < arr[:, np.newaxis]  # TO BE REMOVED
-
+                # temp_pos = arr < arr[:, np.newaxis]  # TO BE REMOVED
                 if i == 0:
-                    temp = arr < arr[:step, np.newaxis]
+                    bin_neg = arr < arr[:step, np.newaxis]
+                    bin_pos = arr > arr[:step, np.newaxis]
                 else:
                     if (i+step) < n:
-                        temp = arr < arr[i:(i+step), np.newaxis]
+                        bin_neg = arr < arr[i:(i+step), np.newaxis]
+                        bin_pos = arr > arr[i:(i+step), np.newaxis]
                     else:
-                        temp = arr < arr[i:, np.newaxis]
-                lst_temp.append(temp)
+                        bin_neg = arr < arr[i:, np.newaxis]
+                        bin_pos = arr > arr[i:, np.newaxis]
+                lst_neg.append(bin_neg)
+                lst_pos.append(bin_pos)
+                lst_neg_sum.append(np.sum(bin_neg))
+                lst_pos_sum.append(np.sum(bin_pos))
+            sup_neg = float(np.sum(lst_neg_sum)) / float(n * (n - 1.0) / 2.0)
+            sup_pos = float(np.sum(lst_pos_sum)) / float(n * (n - 1.0) / 2.0)
+            if sup_neg < self.thd_supp:
+                lst_neg = None
+            else:
+                lst_neg = [np.array(lst_neg_sum, dtype=int), np.array(lst_neg, dtype=object)]
+            if sup_pos < self.thd_supp:
+                lst_pos = None
+            else:
+                lst_pos = [np.array(lst_pos_sum, dtype=int), np.array(lst_pos, dtype=object)]
 
-            print(lst_temp)
+            print(lst_pos)
             print("\n")
-            print(temp_pos)
+            #print(temp_pos)
+            print(str(sup_pos) + ', ' + str(sup_neg))
             print("------\n")
-            return temp_pos
+
+            return lst_pos, lst_neg
+            # return temp_pos
 
     @staticmethod
     def read_csv(file):
