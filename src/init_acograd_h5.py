@@ -21,7 +21,7 @@ Description:
 
 import sys
 from optparse import OptionParser
-from common.profile_mem import Profile
+# from common.profile_mem import Profile
 from ant_colony.aco_grad_h5 import GradACO
 
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
                              # default='../data/FluTopicData-testsansdate-blank.csv',
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
-                             #default='../data/c2k_02k.csv',
+                             # default='../data/c2k_02k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
                              dest='minSup',
@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
     wr_text = ("Run-time: " + str(end - start) + " seconds\n")
     wr_text += (Profile.get_quick_mem_use(snapshot) + "\n")
-    # wr_text += str(res_text)
-    # f_name = str('res_acoh5' + str(end).replace('.', '', 1) + '.txt')
+    wr_text += str(res_text)
+    f_name = str('res_acoh5' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
     print(wr_text)
