@@ -23,7 +23,7 @@ from numpy.core._multiarray_umath import ndarray
 
 class Dataset:
 
-    def __init__(self, file_path, min_sup=0, eq=False):
+    def __init__(self, file_path, min_sup=0):
         data = Dataset.read_csv(file_path)
         if len(data) <= 1:
             self.data = np.array([])
@@ -33,11 +33,10 @@ class Dataset:
         else:
             print("Data fetched from csv file")
             self.thd_supp = min_sup
-            self.equal = eq
             self.data = np.array([])
             self.titles = self.get_titles(data)
-            self.cols_count = self.get_cols_count()
-            self.rows_count = self.get_size()
+            self.col_count = self.get_cols_count()
+            self.row_count = self.get_size()
             self.time_cols = self.get_time_cols()
             self.attr_cols = self.get_attr_cols()
             # self.no_bins = False
@@ -130,7 +129,7 @@ class Dataset:
         # print(len(ind))
 
         # generate tuple indices
-        n = self.rows_count #* 500
+        n = self.row_count #* 500
         valid_bins = list()
         invalid_bins = list()
         for col in self.attr_cols:
@@ -183,14 +182,14 @@ class Dataset:
         # execute binary rank to calculate support of pattern
         # valid_bins = list()  # numpy is very slow for append operations
         # n = self.attr_size
-        n = self.rows_count
+        n = self.row_count
         valid_bins = list()
         invalid_bins = list()
         for col in self.attr_cols:
             col_data = np.array(attr_data[col], dtype=float)
             incr = np.array((col, '+'), dtype='i, S1')
             decr = np.array((col, '-'), dtype='i, S1')
-            temp_pos = Dataset.bin_rank(col_data, equal=self.equal)
+            temp_pos = self.bin_rank(col_data, 3)
             supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
             if supp < self.thd_supp:
                 invalid_bins.append(incr)
@@ -204,22 +203,24 @@ class Dataset:
         # if len(self.valid_bins) < 3:
         #    self.no_bins = True
 
-    @staticmethod
-    def bin_rank(arr, equal=False):
+    def bin_rank(self, arr, seg_no):
+        n = self.row_count
+        step = int(self.row_count / seg_no)
+        lst_temp = []
         with np.errstate(invalid='ignore'):
-            if not equal:
-                temp_pos = arr < arr[:, np.newaxis]
-            else:
-                temp_pos = arr <= arr[:, np.newaxis]
-                np.fill_diagonal(temp_pos, 0)
+            for i in range(0, n, step):
+                temp_pos = arr < arr[:, np.newaxis]  # TO BE REMOVED
 
-            temp1 = arr < arr[:2, np.newaxis]
-            np.fill_diagonal(temp1, 0)
-            temp2 = arr < arr[2:, np.newaxis]
-            np.fill_diagonal(temp1, 0)
-            print(temp1)
-            print("\n")
-            print(temp2)
+                if i == 0:
+                    temp = arr < arr[:step, np.newaxis]
+                else:
+                    if (i+step) < n:
+                        temp = arr < arr[i:(i+step), np.newaxis]
+                    else:
+                        temp = arr < arr[i:, np.newaxis]
+                lst_temp.append(temp)
+
+            print(lst_temp)
             print("\n")
             print(temp_pos)
             print("------\n")
