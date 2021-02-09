@@ -180,15 +180,32 @@ class GradACO:
 
     def validate_gp(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
+        n = self.d_set.row_count
         min_supp = self.d_set.thd_supp
         gen_pattern = GP()
         # bin_data = np.array([])
         arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
         if len(arg) >= 2:
-            bins = self.d_set.valid_bins[arg]
-            print(bins)
+            bin_data = self.d_set.valid_bins[arg.flatten()]
+            seg_sum = np.sum(bin_data[:, 1], axis=0)
+            seg_order = np.argsort(-seg_sum)
+            bin_arr = bin_data[:, 2]
+            temp_bin = bin_arr[0][seg_order[0]]
+            print(bin_data[0][0])
+            for i in seg_order:
+                for j in range(1, len(bin_arr)):
+                    temp_bin = np.multiply(temp_bin, bin_arr[j][i])
+                    print(temp_bin)
+                    supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
+                    print("Support: " + str(supp))
+                    if supp >= min_supp:
+                        print(bin_data[j][0])
+
+            # print(seg_sum)
+            # print(seg_order)
+            # print(bin_arr)
             # print(self.d_set.valid_bins.shape)
-            print(bins.shape)
+            # print(bin_data.shape)
             # print(bins[:, 0])
             # print(pattern.get_np_pattern())
             # print(bin_obj)
