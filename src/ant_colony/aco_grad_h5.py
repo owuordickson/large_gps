@@ -184,12 +184,19 @@ class GradACO:
         gen_pattern = GP()
         # bin_data = np.array([])
         arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
-
-        # print(self.d_set.valid_bins[:, 0])
-        # print(pattern.get_np_pattern())
-        print(arg)
-        print(len(arg))
-        return pattern
+        if len(arg) >= 2:
+            bin_obj = self.d_set.valid_bins[arg]
+            # print(pattern.get_np_pattern())
+            # print(bin_obj)
+            # print("----\n\n")
+            # self.bin_and(arg)
+            # print(self.d_set.valid_bins[:, 0])
+            # print(arg)
+            # print(len(arg))
+        if len(gen_pattern.gradual_items) <= 1:
+            return pattern
+        else:
+            return gen_pattern
 
     def bin_and(self, bins, n):
         # bin_ = np.zeros((n, n), dtype=bool)
