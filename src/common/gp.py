@@ -75,6 +75,12 @@ class GP:
             pattern.append(item.gradual_item.tolist())
         return pattern
 
+    def get_np_pattern(self):
+        pattern = []
+        for item in self.gradual_items:
+            pattern.append(item.gradual_item)
+        return np.array(pattern)
+
     def get_tuples(self):
         pattern = list()
         for gi in self.gradual_items:

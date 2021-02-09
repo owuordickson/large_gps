@@ -187,18 +187,18 @@ class Dataset:
             if arr_pos is None:
                 invalid_bins.append(incr)
             else:
-                valid_bins.append(np.array([incr.tolist(), arr_pos], dtype=object))
+                valid_bins.append(np.array([incr.tolist(), arr_pos[0], arr_pos[1]], dtype=object))
             if arr_neg is None:
                 invalid_bins.append(decr)
             else:
-                valid_bins.append(np.array([decr.tolist(), arr_neg], dtype=object))
+                valid_bins.append(np.array([decr.tolist(), arr_neg[0], arr_neg[1]], dtype=object))
         # print(valid_bins)
         self.valid_bins = np.array(valid_bins)
         self.invalid_bins = np.array(invalid_bins)
         if len(self.valid_bins) < 3:
             self.no_bins = True
         else:
-            self.seg_count = self.valid_bins[0][1][0].size
+            self.seg_count = self.valid_bins[0][1].size
 
     def bin_rank(self, arr, seg_no):
         n = self.row_count

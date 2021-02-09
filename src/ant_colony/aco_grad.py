@@ -125,7 +125,8 @@ class GradACO:
             if self.d_set.invalid_bins.size > 0 and np.any(np.isin(self.d_set.invalid_bins, gi.gradual_item)):
                 continue
             else:
-                # print(self.d_set.valid_bins[:])
+                print(self.d_set.valid_bins[:, 0])
+                print(gi.gradual_item)
                 arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], gi.gradual_item))
                 print(arg)
                 if len(arg) > 0:

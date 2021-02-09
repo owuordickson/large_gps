@@ -115,7 +115,7 @@ class GradACO:
             pattern.add_gradual_item(temp)
         return pattern
 
-    def validate_gp(self, pattern):
+    def validate_gp_old(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
         min_supp = self.d_set.thd_supp
         gen_pattern = GP()
@@ -125,7 +125,7 @@ class GradACO:
             if self.d_set.invalid_bins.size > 0 and np.any(np.isin(self.d_set.invalid_bins, gi.gradual_item)):
                 continue
             else:
-                # print(self.d_set.valid_bins[:])
+                print(self.d_set.valid_bins[:, 0])
                 arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], gi.gradual_item))
                 # print(arg)
                 arg = [[2]]
@@ -178,6 +178,19 @@ class GradACO:
                 return True
         return False
 
+    def validate_gp(self, pattern):
+        # pattern = [('2', '+'), ('4', '+')]
+        min_supp = self.d_set.thd_supp
+        gen_pattern = GP()
+        # bin_data = np.array([])
+        arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
+
+        # print(self.d_set.valid_bins[:, 0])
+        # print(pattern.get_np_pattern())
+        print(arg)
+        print(len(arg))
+        return pattern
+
     def bin_and(self, bins, n):
         # bin_ = np.zeros((n, n), dtype=bool)
         bin_obj1 = bins[0]
@@ -189,8 +202,9 @@ class GradACO:
             supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
             if supp >= self.d_set.thd_supp:
                 print(supp)
-            print(i)
-            print(temp_bin)
+                print(i)
+                print(temp_bin)
+                break
         # temp_bin = bins[0] * bins[1]
         # supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
         return bins[0], 0  # TO BE REMOVED
