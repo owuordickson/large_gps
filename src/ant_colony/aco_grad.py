@@ -14,8 +14,8 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 import numpy as np
 from numpy import random as rand
-from ..common.gp import GI, GP
-from ..common.dataset_bfs import Dataset
+from common.gp import GI, GP
+from common.dataset_bfs import Dataset
 
 
 class GradACO:
@@ -125,7 +125,9 @@ class GradACO:
             if self.d_set.invalid_bins.size > 0 and np.any(np.isin(self.d_set.invalid_bins, gi.gradual_item)):
                 continue
             else:
+                # print(self.d_set.valid_bins[:])
                 arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], gi.gradual_item))
+                print(arg)
                 if len(arg) > 0:
                     i = arg[0][0]
                     bin_obj = self.d_set.valid_bins[i]
@@ -134,7 +136,7 @@ class GradACO:
                         gen_pattern.add_gradual_item(gi)
                     else:
                         bin_data[1] = bin_obj[1]
-                        temp_bin, supp = self.bin_and(bin_data, self.d_set.attr_size)
+                        temp_bin, supp = GradACO.bin_and(bin_data, self.d_set.attr_size)
                         if supp >= min_supp:
                             bin_data[0] = temp_bin
                             gen_pattern.add_gradual_item(gi)
