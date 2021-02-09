@@ -185,10 +185,14 @@ class GradACO:
         # bin_data = np.array([])
         arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
         if len(arg) >= 2:
-            bin_obj = self.d_set.valid_bins[arg]
+            bins = self.d_set.valid_bins[arg]
+            print(bins)
+            # print(self.d_set.valid_bins.shape)
+            print(bins.shape)
+            # print(bins[:, 0])
             # print(pattern.get_np_pattern())
             # print(bin_obj)
-            # print("----\n\n")
+            print("----\n\n")
             # self.bin_and(arg)
             # print(self.d_set.valid_bins[:, 0])
             # print(arg)
