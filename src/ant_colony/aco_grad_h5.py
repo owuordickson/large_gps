@@ -137,7 +137,7 @@ class GradACO:
                         gen_pattern.add_gradual_item(gi)
                     else:
                         bin_data[1] = bin_obj[1]
-                        temp_bin, supp = GradACO.bin_and(bin_data, self.d_set.row_count)
+                        temp_bin, supp = self.bin_and(bin_data, self.d_set.row_count)
                         if supp >= min_supp:
                             bin_data[0] = temp_bin
                             gen_pattern.add_gradual_item(gi)
@@ -178,19 +178,24 @@ class GradACO:
                 return True
         return False
 
-    @staticmethod
-    def bin_and(bins, n):
+    def bin_and(self, bins, n):
         # bin_ = np.zeros((n, n), dtype=bool)
         bin_obj1 = bins[0]
         bin_obj2 = bins[1]
         # seg_order = GradACO.obtain_seg_order(bin_obj1[0], bin_obj2[0])  TO BE REMOVED
         seg_order = np.argsort(-(bin_obj1[0] + bin_obj2[0]))
-        print(seg_order)
+        for i in seg_order:
+            temp_bin = bin_obj1[1][i] * bin_obj2[1][i]
+            supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
+            if supp >= self.d_set.thd_supp:
+                print(supp)
+            print(i)
+            print(temp_bin)
         # temp_bin = bins[0] * bins[1]
         # supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
         return bins[0], 0  # TO BE REMOVED
 
-    @staticmethod
+    @staticmethod  # TO BE REMOVED
     def obtain_seg_order(seg1, seg2):
         # print(seg1)
         # print(seg2)
