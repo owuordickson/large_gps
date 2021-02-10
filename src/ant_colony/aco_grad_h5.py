@@ -191,23 +191,31 @@ class GradACO:
             seg_order = np.argsort(-seg_sum)
             bin_arr = bin_data[:, 2]
 
-            bin_sum = 0
             gi = GI(bin_data[0][0][0], bin_data[0][0][1].decode())
             gen_pattern.add_gradual_item(gi)
             print(gi.to_string())
-            print(seg_order)
+            # print(seg_order)
+            # print(bin_data)
+            # print(bin_arr)
             # temp_bin = bin_arr[0][seg_order[0]]
+            bin_sum = 0
             for i in seg_order:
                 for j in range(1, len(bin_arr)):
-                    temp_bin = np.multiply(bin_arr[j-1][i], bin_arr[j][i])# np.multiply(temp_bin, bin_arr[j][i])
-                bin_sum += np.sum(temp_bin)
-                supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-                print("Support: " + str(supp))
-                if supp >= min_supp:
-                    gi = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
-                    gen_pattern.add_gradual_item(gi)
-                    gen_pattern.set_support(supp)
-                    print(gi.to_string())
+                    if j == 1:
+                        curr_bin = bin_arr[0][i]
+                    temp_bin = np.multiply(curr_bin, bin_arr[j][i])  # np.multiply(temp_bin, bin_arr[j][i])
+                    curr_bin = temp_bin.copy()
+
+                    print(temp_bin)
+                    print("\n")
+                    bin_sum += np.sum(temp_bin)
+                    supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+                    print("Support: " + str(supp))
+                    if supp >= min_supp:
+                        gi = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
+                        gen_pattern.add_gradual_item(gi)
+                        gen_pattern.set_support(supp)
+                        print(gi.to_string())
             # print(seg_sum)
             # print(seg_order)
             # print(bin_arr)
