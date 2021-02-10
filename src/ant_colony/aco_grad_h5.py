@@ -25,6 +25,8 @@ class GradACO:
         self.d_set.init_gp_attributes(segs)
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
+        # self.used_segs = 0
+        self.iteration_count = 0
         self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
 
     def deposit_pheromone(self, pattern):
@@ -62,6 +64,7 @@ class GradACO:
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
         repeated = 0
+        it_count = 0
         if self.d_set.no_bins:
             return []
         while repeated < 1:
@@ -93,6 +96,8 @@ class GradACO:
                         loser_gps.append(rand_gp)
                 else:
                     repeated += 1
+            it_count += 1
+        self.iteration_count = it_count
         return winner_gps
 
     def generate_random_gp(self):
@@ -115,73 +120,11 @@ class GradACO:
             pattern.add_gradual_item(temp)
         return pattern
 
-    def validate_gp_old(self, pattern):
-        # pattern = [('2', '+'), ('4', '+')]
-        min_supp = self.d_set.thd_supp
-        gen_pattern = GP()
-        bin_data = np.array([])
-
-        for gi in pattern.gradual_items:
-            if self.d_set.invalid_bins.size > 0 and np.any(np.isin(self.d_set.invalid_bins, gi.gradual_item)):
-                continue
-            else:
-                print(self.d_set.valid_bins[:, 0])
-                arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], gi.gradual_item))
-                # print(arg)
-                arg = [[2]]
-                if len(arg) > 0:
-                    i = arg[0][0]
-                    bin_obj = self.d_set.valid_bins[i]
-                    if bin_data.size <= 0:
-                        bin_data = np.array([bin_obj[1], bin_obj[1]])
-                        gen_pattern.add_gradual_item(gi)
-                    else:
-                        bin_data[1] = bin_obj[1]
-                        temp_bin, supp = self.bin_and(bin_data, self.d_set.row_count)
-                        if supp >= min_supp:
-                            bin_data[0] = temp_bin
-                            gen_pattern.add_gradual_item(gi)
-                            gen_pattern.set_support(supp)
-        if len(gen_pattern.gradual_items) <= 1:
-            return pattern
-        else:
-            return gen_pattern
-
-    @staticmethod
-    def check_anti_monotony(lst_p, pattern, subset=True):
-        result = False
-        if subset:
-            for pat in lst_p:
-                result1 = set(pattern.get_pattern()).issubset(set(pat.get_pattern()))
-                result2 = set(pattern.inv_pattern()).issubset(set(pat.get_pattern()))
-                if result1 or result2:
-                    result = True
-                    break
-        else:
-            for pat in lst_p:
-                result1 = set(pattern.get_pattern()).issuperset(set(pat.get_pattern()))
-                result2 = set(pattern.inv_pattern()).issuperset(set(pat.get_pattern()))
-                if result1 or result2:
-                    result = True
-                    break
-        return result
-
-    @staticmethod
-    def is_duplicate(pattern, lst_winners, lst_losers):
-        for pat in lst_losers:
-            if set(pattern.get_pattern()) == set(pat.get_pattern()) or \
-                    set(pattern.inv_pattern()) == set(pat.get_pattern()):
-                return True
-        for pat in lst_winners:
-            if set(pattern.get_pattern()) == set(pat.get_pattern()) or \
-                    set(pattern.inv_pattern()) == set(pat.get_pattern()):
-                return True
-        return False
-
     def validate_gp(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
         n = self.d_set.row_count
         min_supp = self.d_set.thd_supp
+        seg_count = 0
         gen_pattern = GP()
         arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
         if len(arg) >= 2:
@@ -225,41 +168,46 @@ class GradACO:
                             gen_pattern.add_gradual_item(gi_2)
                         gen_pattern.set_support(supp)
                 bin_sum += temp_sum
+                seg_count += 1
                 supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
                 if supp >= min_supp:
-                    # self.
-                    print("stopped at: " + str(i))
+                    print("stopped at: " + str(seg_count))
+                    break
         print(gen_pattern.to_string())
         print("----\n\n")
+        # self.used_segs = seg_count
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
         else:
             return gen_pattern
 
-    def bin_and(self, bins, n):
-        # bin_ = np.zeros((n, n), dtype=bool)
-        bin_obj1 = bins[0]
-        bin_obj2 = bins[1]
-        # seg_order = GradACO.obtain_seg_order(bin_obj1[0], bin_obj2[0])  TO BE REMOVED
-        seg_order = np.argsort(-(bin_obj1[0] + bin_obj2[0]))
-        for i in seg_order:
-            temp_bin = bin_obj1[1][i] * bin_obj2[1][i]
-            supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
-            if supp >= self.d_set.thd_supp:
-                print(supp)
-                print(i)
-                print(temp_bin)
-                break
-        # temp_bin = bins[0] * bins[1]
-        # supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
-        return bins[0], 0  # TO BE REMOVED
+    @staticmethod
+    def check_anti_monotony(lst_p, pattern, subset=True):
+        result = False
+        if subset:
+            for pat in lst_p:
+                result1 = set(pattern.get_pattern()).issubset(set(pat.get_pattern()))
+                result2 = set(pattern.inv_pattern()).issubset(set(pat.get_pattern()))
+                if result1 or result2:
+                    result = True
+                    break
+        else:
+            for pat in lst_p:
+                result1 = set(pattern.get_pattern()).issuperset(set(pat.get_pattern()))
+                result2 = set(pattern.inv_pattern()).issuperset(set(pat.get_pattern()))
+                if result1 or result2:
+                    result = True
+                    break
+        return result
 
-    @staticmethod  # TO BE REMOVED
-    def obtain_seg_order(seg1, seg2):
-        # print(seg1)
-        # print(seg2)
-        order = np.argsort(-(seg1 + seg2))
-        # print((seg1 + seg2))
-        # print(order)
-        # print("----- \n\n")
-        return order
+    @staticmethod
+    def is_duplicate(pattern, lst_winners, lst_losers):
+        for pat in lst_losers:
+            if set(pattern.get_pattern()) == set(pat.get_pattern()) or \
+                    set(pattern.inv_pattern()) == set(pat.get_pattern()):
+                return True
+        for pat in lst_winners:
+            if set(pattern.get_pattern()) == set(pat.get_pattern()) or \
+                    set(pattern.inv_pattern()) == set(pat.get_pattern()):
+                return True
+        return False

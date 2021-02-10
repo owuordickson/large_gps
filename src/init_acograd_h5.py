@@ -41,10 +41,10 @@ def init_algorithm(f_path, min_supp, cores, seg_size=2):
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "Segment size: " + str(seg_size) + '\n'
         wr_line += "Total number of segments: " + str(ac.d_set.seg_count) + '\n'
-        wr_line += "Number of used segments: " + str(ac.d_set.seg_count) + '\n'
+        # wr_line += "Number of used segments: " + str(ac.used_segs) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
-        # wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
-        # wr_line += "Number of iterations: " + str(ac.iteration_count) + '\n\n'
+        wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
+        wr_line += "Number of iterations: " + str(ac.iteration_count) + '\n\n'
 
         for txt in ac.d_set.titles:
             try:
