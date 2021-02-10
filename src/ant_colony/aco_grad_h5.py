@@ -228,7 +228,7 @@ class GradACO:
                 supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
                 if supp >= min_supp:
                     # self.
-                    print(i)
+                    print("stopped at" + str(i))
             # print(seg_sum)
             # print(seg_order)
             # print(bin_arr)
