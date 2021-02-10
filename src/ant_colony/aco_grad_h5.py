@@ -197,35 +197,37 @@ class GradACO:
             # print(bin_arr)
             # temp_bin = bin_arr[0][seg_order[0]]
             bin_sum = 0
-            curr_bin = None
             for i in seg_order:
+                curr_bin = None
+                gi_1 = None
+                temp_sum = 0
                 for j in range(len(bin_arr)):
                     if curr_bin is None:
                         curr_bin = bin_arr[j][i]
-                        continue
-                        # gi = GI(bin_data[0][0][0], bin_data[0][0][1].decode())
-                        # gen_pattern.add_gradual_item(gi)
-                    temp_bin = np.multiply(curr_bin, bin_arr[j][i])
-                    temp_sum = np.sum(temp_bin)
-                    # if temp_sum == 0:
-                    #    continue
-                    bin_sum += temp_sum
-                    curr_bin = temp_bin.copy()
-                    # print(temp_bin)
-                    # print("\n")
-                    supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-                    print("sum: " + str(temp_sum) + ' | total: ' + str(bin_sum))
-                    print("Support: " + str(supp))
-                    if supp >= min_supp:
-                        # curr_bin = temp_bin.copy()
+                        gi_1 = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
+                    else:
+                        temp_bin = np.multiply(curr_bin, bin_arr[j][i])
+                        temp_sum = np.sum(temp_bin)
                         # bin_sum += temp_sum
-                        gi = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
-                        if not gen_pattern.contains(gi):
-                            print(gi.to_string())
+                        supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)
+                        curr_bin = np.copy(temp_bin)
+
+                        # print(temp_bin)
+                        # print("\n")
+                        print(str(i) + " -- sum: " + str(temp_sum) + ' | total: ' + str(bin_sum))
+                        print("Support: " + str(supp))
+                        # if supp >= min_supp:
+                            # curr_bin = temp_bin.copy()
+                            # bin_sum += temp_sum
+                        if not gen_pattern.contains(gi_1):
+                            gen_pattern.add_gradual_item(gi_1)
+                        gi_2 = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
+                        if not gen_pattern.contains(gi_2):
+                            print(gi_2.to_string())
                             print(gen_pattern.to_string())
-                            gen_pattern.add_gradual_item(gi)
+                            gen_pattern.add_gradual_item(gi_2)
                         gen_pattern.set_support(supp)
-                        # print(gi.to_string())
+                bin_sum += temp_sum
             # print(seg_sum)
             # print(seg_order)
             # print(bin_arr)

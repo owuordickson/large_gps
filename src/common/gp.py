@@ -104,6 +104,8 @@ class GP:
         return pattern
 
     def contains(self, gi):
+        if gi is None:
+            return False
         for gi_obj in self.gradual_items:
             if (gi.symbol == gi_obj.symbol) and (gi.attribute_col == gi_obj.attribute_col):
                 return True
