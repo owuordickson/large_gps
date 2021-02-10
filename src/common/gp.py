@@ -103,6 +103,12 @@ class GP:
             pattern.append(gi.inv().tolist())
         return pattern
 
+    def contains(self, gi):
+        for gi_obj in self.gradual_items:
+            if (gi.symbol == gi_obj.symbol) and (gi.attribute_col == gi_obj.attribute_col):
+                return True
+        return False
+
     def to_string(self):
         pattern = list()
         for item in self.gradual_items:
