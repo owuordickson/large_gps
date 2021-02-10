@@ -183,7 +183,6 @@ class GradACO:
         n = self.d_set.row_count
         min_supp = self.d_set.thd_supp
         gen_pattern = GP()
-        # bin_data = np.array([])
         arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
         if len(arg) >= 2:
             bin_data = self.d_set.valid_bins[arg.flatten()]
@@ -208,17 +207,15 @@ class GradACO:
                     else:
                         temp_bin = np.multiply(curr_bin, bin_arr[j][i])
                         temp_sum = np.sum(temp_bin)
-                        # bin_sum += temp_sum
-                        supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)
                         curr_bin = np.copy(temp_bin)
 
+                        # bin_sum += temp_sum
+                        supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)  # TO BE REMOVED
                         # print(temp_bin)
                         # print("\n")
                         print(str(i) + " -- sum: " + str(temp_sum) + ' | total: ' + str(bin_sum))
                         print("Support: " + str(supp))
-                        # if supp >= min_supp:
-                            # curr_bin = temp_bin.copy()
-                            # bin_sum += temp_sum
+
                         if not gen_pattern.contains(gi_1):
                             gen_pattern.add_gradual_item(gi_1)
                         gi_2 = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
@@ -228,6 +225,10 @@ class GradACO:
                             gen_pattern.add_gradual_item(gi_2)
                         gen_pattern.set_support(supp)
                 bin_sum += temp_sum
+                supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+                if supp >= min_supp:
+                    # self.
+                    print(i)
             # print(seg_sum)
             # print(seg_order)
             # print(bin_arr)
