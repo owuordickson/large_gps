@@ -229,19 +229,6 @@ class GradACO:
                 if supp >= min_supp:
                     # self.
                     print("stopped at: " + str(i))
-            # print(seg_sum)
-            # print(seg_order)
-            # print(bin_arr)
-            # print(self.d_set.valid_bins.shape)
-            # print(bin_data.shape)
-            # print(bins[:, 0])
-            # print(pattern.get_np_pattern())
-            # print(bin_obj)
-            # print("----\n\n")
-            # self.bin_and(arg)
-            # print(self.d_set.valid_bins[:, 0])
-            # print(arg)
-            # print(len(arg))
         print(gen_pattern.to_string())
         print("----\n\n")
         if len(gen_pattern.gradual_items) <= 1:
