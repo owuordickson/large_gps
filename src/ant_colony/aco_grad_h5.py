@@ -133,7 +133,7 @@ class GradACO:
             seg_order = np.argsort(-seg_sum)
             bin_arr = bin_data[:, 2]
 
-            print(seg_order)
+            # print(seg_order)
             # print(bin_data)
             # print("\n")
             # print(bin_arr)
@@ -153,28 +153,29 @@ class GradACO:
                         curr_bin = np.copy(temp_bin)
 
                         # bin_sum += temp_sum
-                        supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)  # TO BE REMOVED
+                        # supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)  # TO BE REMOVED
                         # print(temp_bin)
                         # print("\n")
-                        print(str(i) + " -- sum: " + str(temp_sum) + ' | total: ' + str(bin_sum))
-                        print("Support: " + str(supp))
+                        # print(str(i) + " -- sum: " + str(temp_sum) + ' | total: ' + str(bin_sum))
+                        # print("Support: " + str(supp))
 
                         if not gen_pattern.contains(gi_1):
                             gen_pattern.add_gradual_item(gi_1)
                         gi_2 = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
                         if not gen_pattern.contains(gi_2):
-                            print(gi_2.to_string())
-                            print(gen_pattern.to_string())
+                            # print(gi_2.to_string())
+                            # print(gen_pattern.to_string())
                             gen_pattern.add_gradual_item(gi_2)
+                        supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)
                         gen_pattern.set_support(supp)
                 bin_sum += temp_sum
                 seg_count += 1
                 supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
                 if supp >= min_supp:
-                    print("stopped at: " + str(seg_count))
+                    # print("stopped at: " + str(seg_count))
                     break
-        print(gen_pattern.to_string())
-        print("----\n\n")
+        # print(gen_pattern.to_string())
+        # print("----\n\n")
         # self.used_segs = seg_count
         if len(gen_pattern.gradual_items) <= 1:
             return pattern

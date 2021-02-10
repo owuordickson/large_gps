@@ -25,6 +25,7 @@ class GradACO:
         self.d_set.init_gp_attributes()
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
+        self.iteration_count = 0
         self.p_matrix = np.ones((self.d_set.column_size, 3), dtype=float)
 
     def deposit_pheromone(self, pattern):
@@ -62,6 +63,7 @@ class GradACO:
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
         repeated = 0
+        it_count = 0
         if self.d_set.no_bins:
             return []
         while repeated < 1:
@@ -93,6 +95,8 @@ class GradACO:
                         loser_gps.append(rand_gp)
                 else:
                     repeated += 1
+            it_count += 1
+        self.iteration_count = it_count
         return winner_gps
 
     def generate_random_gp(self):
@@ -125,10 +129,7 @@ class GradACO:
             if self.d_set.invalid_bins.size > 0 and np.any(np.isin(self.d_set.invalid_bins, gi.gradual_item)):
                 continue
             else:
-                print(self.d_set.valid_bins[:, 0])
-                print(gi.gradual_item)
                 arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], gi.gradual_item))
-                print(arg)
                 if len(arg) > 0:
                     i = arg[0][0]
                     bin_obj = self.d_set.valid_bins[i]

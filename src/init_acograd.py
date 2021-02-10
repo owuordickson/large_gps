@@ -20,7 +20,7 @@ Description:
 
 import sys
 from optparse import OptionParser
-from common.profile_mem import Profile
+# from common.profile_mem import Profile
 from ant_colony.aco_grad import GradACO
 
 
@@ -40,7 +40,8 @@ def init_algorithm(f_path, min_supp, cores, eq=False):
         wr_line += "No. of (dataset) tuples: " + str(d_set.size) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
-        wr_line += "Number of patterns: " + str(len(list_gp)) + '\n\n'
+        wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
+        wr_line += "Number of iterations: " + str(ac.iteration_count) + '\n\n'
 
         for txt in d_set.title:
             try:
@@ -119,17 +120,17 @@ if __name__ == "__main__":
         numCores = options.numCores
 
     import time
-    # import tracemalloc
-    # from algorithms.common.profile_mem import Profile
+    import tracemalloc
+    from common.profile_mem import Profile
 
     start = time.time()
-    # tracemalloc.start()
+    tracemalloc.start()
     res_text = init_algorithm(filePath, minSup, numCores, allowEq)
-    # snapshot = tracemalloc.take_snapshot()
+    snapshot = tracemalloc.take_snapshot()
     end = time.time()
 
     wr_text = ("Run-time: " + str(end - start) + " seconds\n")
-    # wr_text += (Profile.get_quick_mem_use(snapshot) + "\n")
+    wr_text += (Profile.get_quick_mem_use(snapshot) + "\n")
     wr_text += str(res_text)
     f_name = str('res_aco' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
