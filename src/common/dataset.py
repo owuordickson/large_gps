@@ -110,70 +110,10 @@ class Dataset:
         attr_data = self.data.copy().T
         # self.attr_size = len(attr_data[self.attr_cols[0]])
         # construct and store 1-item_set valid bins
-        self.construct_bins_new(attr_data, seg_no)
+        self.construct_bins(attr_data, seg_no)
         attr_data = None
 
-    def construct_bins(self, attr_data):
-        # print(self.data)
-        # print("\n")
-        # print(attr_data)
-        # print("\n\n\n\n")
-        # from itertools import product
-        # ind = [[x, y] for x, y in product(range(n), range(n))]
-        # arr_n = np.arange(n)
-        # ind =
-        # print(arr_n)
-        # ind = [[i, j] for i in range(n) for j in range(i+1, n)]
-        # print(ind)
-        # print(len(ind))
-
-        # generate tuple indices
-        n = self.row_count
-        valid_bins = list()
-        invalid_bins = list()
-        for col in self.attr_cols:
-            col_data = np.array(attr_data[col], dtype=float)
-            incr = np.array((col, '+'), dtype='i, S1')
-            decr = np.array((col, '-'), dtype='i, S1')
-            # arr_pos = [col_data[i] > col_data[j] for i in range(n) for j in range(i + 1, n)]
-            # arr_neg = [col_data[i] < col_data[j] for i in range(n) for j in range(i + 1, n)]
-            arr_pos = []  # np.zeros((n), dtype=bool)
-            arr_neg = []  # np.zeros((n), dtype=bool)
-            for i in range(n):
-                for j in range(i + 1, n):
-                    if col_data[i] > col_data[j]:
-                        arr_pos.append(True)
-                        arr_neg.append(False)
-                    else:
-                        if col_data[i] < col_data[j]:
-                            arr_neg.append(True)
-                            arr_pos.append(False)
-            arr_pos = np.array(arr_pos)
-            arr_neg = np.array(arr_neg)
-            supp = float(np.sum(arr_pos)) / float(n * (n - 1.0) / 2.0)
-            if supp < self.thd_supp:
-                invalid_bins.append(incr)
-            else:
-                valid_bins.append(np.array([incr.tolist(), arr_pos], dtype=object))
-
-            supp = float(np.sum(arr_neg)) / float(n * (n - 1.0) / 2.0)
-            if supp < self.thd_supp:
-                invalid_bins.append(decr)
-            else:
-                valid_bins.append(np.array([decr.tolist(), arr_neg], dtype=object))
-        print(np.array(valid_bins))
-
-        # supp = float(np.sum(arr_bin)) / float(n * (n - 1.0) / 2.0)
-        # print(arr_bin)
-        # print(len(arr_bin))
-        # print("Support: " + str(supp))
-        # temp_pos = Dataset.bin_rank(col_data, equal=self.equal)
-        # supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
-        # print(temp_pos)
-        # print(len(temp_pos))
-        # print("Support: " + str(supp))
-
-    def construct_bins_new(self, attr_data, seg_no):
+    def construct_bins(self, attr_data, seg_no):
         # execute binary rank to calculate support of pattern
         # valid_bins = list()  # numpy is very slow for append operations
         # n = self.attr_size
