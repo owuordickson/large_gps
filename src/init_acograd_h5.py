@@ -130,4 +130,4 @@ if __name__ == "__main__":
     wr_text += str(res_text)
     f_name = str('res_acoh5' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
-    print(wr_text)
+    # print(wr_text)

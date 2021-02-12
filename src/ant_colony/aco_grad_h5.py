@@ -13,6 +13,7 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 
 import numpy as np
+import pandas as pd
 from numpy import random as rand
 from common.gp import GI, GP
 from common.dataset import Dataset
@@ -120,7 +121,7 @@ class GradACO:
             pattern.add_gradual_item(temp)
         return pattern
 
-    def validate_gp(self, pattern):
+    def validate_gp_wait(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
         n = self.d_set.row_count
         min_supp = self.d_set.thd_supp
@@ -177,6 +178,25 @@ class GradACO:
         # print(gen_pattern.to_string())
         # print("----\n\n")
         # self.used_segs = seg_count
+        if len(gen_pattern.gradual_items) <= 1:
+            return pattern
+        else:
+            return gen_pattern
+
+    def validate_gp(self, pattern):
+        # pattern = [('2', '+'), ('4', '+')]
+        n = self.d_set.row_count
+        min_supp = self.d_set.thd_supp
+        seg_count = 0
+        gen_pattern = GP()
+        arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
+        if len(arg) >= 2:
+            bin_data = self.d_set.valid_bins[arg.flatten()]
+            segments = bin_data[:, 1]
+            print(segments)
+            tbl = pd.DataFrame(data=segments, columns=segments[0])
+            print(tbl)
+
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
         else:
