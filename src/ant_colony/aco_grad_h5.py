@@ -13,7 +13,7 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 
 import numpy as np
-import pandas as pd
+# import pandas as pd
 from numpy import random as rand
 from common.gp import GI, GP
 from common.dataset import Dataset
@@ -192,15 +192,60 @@ class GradACO:
         arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
         if len(arg) >= 2:
             bin_data = self.d_set.valid_bins[arg.flatten()]
-            segments = bin_data[:, 1]
-            print(segments)
-            tbl = pd.DataFrame(data=segments, columns=segments[0])
-            print(tbl)
+            segments = np.stack(bin_data[:, 1])
+            large_col_sum = segments.sum(axis=0)
+            large_rows = np.argsort(-segments[:, large_col_sum.argmax()])
+            # print(large_col_sum)
+            # print(large_rows)
+            # print(bin_data)
+            bin_arr = None
+            for idx in large_rows:
+                if bin_arr is None:
+                    # row_idx = large_rows[-1]
+                    # temp_idx = large_rows[-2]
+                    bin_arr = np.array([bin_data[idx][2], None], dtype=object)
+                    gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
+                    gen_pattern.add_gradual_item(gi)
+                    continue
+                else:
+                    bin_arr[1] = bin_data[idx][2]
+                    temp_bin, supp = self.bin_and(bin_arr)
+                    if supp >= min_supp:
+                        bin_arr[0] = temp_bin
+                        gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
+                        gen_pattern.add_gradual_item(gi)
+                        gen_pattern.set_support(supp)
+
+            # print(large_col_sum.argmax())
+            # print(segments.sum(axis=0))
+            # print("\n")
+            # tbl = pd.DataFrame(data=segments)
+            # print(tbl)
+            # print("---\n\n")
 
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
         else:
             return gen_pattern
+
+    def bin_and(self, bins):
+        n = self.d_set.row_count
+        bin_1 = bins[0]
+        bin_2 = bins[1]
+        temp_bin = []
+        bin_sum = 0
+        for i in range(len(bin_1)):
+            prod = bin_1[i] * bin_2[i]
+            temp_bin.append(prod)
+            bin_sum += np.sum(prod)
+            # print(str(bin_1[i]) + ' x ' + str(bin_2[i]) + '\n')
+            # print(temp_bin)
+            # print("***")
+        temp_bin = np.array(temp_bin, dtype=object)
+        # print(temp_bin)
+        # print(np.sum(temp_bin))
+        supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+        return temp_bin, supp
 
     @staticmethod
     def check_anti_monotony(lst_p, pattern, subset=True):
