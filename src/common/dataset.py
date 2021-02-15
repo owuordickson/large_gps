@@ -43,6 +43,8 @@ class Dataset:
             # self.step_name = ''
             self.invalid_bins = np.array([])
             self.valid_bins = np.array([])
+            self.d_matrix = np.array([])
+            self.p_matrix = np.array([])
             data = None
             # self.init_attributes()
 
@@ -69,7 +71,6 @@ class Dataset:
 
     def get_attr_cols(self):
         all_cols = np.arange(self.get_cols_count())
-        # attr_cols = np.delete(all_cols, self.time_cols)
         attr_cols = np.setdiff1d(all_cols, self.time_cols)
         return attr_cols
 
@@ -108,25 +109,12 @@ class Dataset:
         # (check) implement parallel multiprocessing
         # transpose csv array data
         attr_data = self.data.copy().T
-        # self.attr_size = len(attr_data[self.attr_cols[0]])
         # construct and store 1-item_set valid bins
         self.construct_bins_new(attr_data, seg_no)
         attr_data = None
+        self.aco_code()
 
     def construct_bins(self, attr_data):
-        # print(self.data)
-        # print("\n")
-        # print(attr_data)
-        # print("\n\n\n\n")
-        # from itertools import product
-        # ind = [[x, y] for x, y in product(range(n), range(n))]
-        # arr_n = np.arange(n)
-        # ind =
-        # print(arr_n)
-        # ind = [[i, j] for i in range(n) for j in range(i+1, n)]
-        # print(ind)
-        # print(len(ind))
-
         # generate tuple indices
         n = self.row_count
         valid_bins = list()
@@ -163,16 +151,6 @@ class Dataset:
                 valid_bins.append(np.array([decr.tolist(), arr_neg], dtype=object))
         print(np.array(valid_bins))
 
-        # supp = float(np.sum(arr_bin)) / float(n * (n - 1.0) / 2.0)
-        # print(arr_bin)
-        # print(len(arr_bin))
-        # print("Support: " + str(supp))
-        # temp_pos = Dataset.bin_rank(col_data, equal=self.equal)
-        # supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
-        # print(temp_pos)
-        # print(len(temp_pos))
-        # print("Support: " + str(supp))
-
     def construct_bins_new(self, attr_data, seg_no):
         # execute binary rank to calculate support of pattern
         # valid_bins = list()  # numpy is very slow for append operations
@@ -199,6 +177,13 @@ class Dataset:
             self.no_bins = True
         else:
             self.seg_count = self.valid_bins[0][1].size
+            valid_attr_count = self.valid_bins.size
+            # self.d_matrix = np.zeros(valid_attr_count, self.seg_count)
+            self.d_matrix = np.stack(self.valid_bins[:, 1])
+            self.p_matrix = np.ones(self.d_matrix.shape, dtype=float)
+            print(self.d_matrix)
+            # print(self.p_matrix)
+            print("-------\n\n")
 
     def bin_rank(self, arr, seg_no):
         n = self.row_count
@@ -234,6 +219,119 @@ class Dataset:
             else:
                 lst_pos = [np.array(lst_pos_sum, dtype=int), np.array(lst_pos, dtype=object)]
             return lst_pos, lst_neg
+
+    def aco_code(self):
+        d = self.d_matrix
+
+    def aco_code_git(self):
+        d = self.d_matrix
+        iteration = 100
+        n_ants = 8
+        n_city = 3
+        m = n_ants
+        n = n_city
+        e = .5  # evaporation factor
+        alpha = 1  # pheromone factor
+        beta = 2  # visibility factor
+
+        # calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+        visibility = 1/d
+        visibility[visibility == np.inf] = 0
+
+        # intializing pheromne present at the paths to the cities
+
+        pheromne = .1 * np.ones((m, n))
+        # intializing the rute of the ants with size rute(n_ants,n_citys+1)
+        # note adding 1 because we want to come back to the source city
+        rute = np.ones((m, n + 1))
+
+        # intializing pheromne present at the paths to the cities
+
+        pheromne = .1 * np.ones((m, n))
+
+        # intializing the rute of the ants with size rute(n_ants,n_citys+1)
+        # note adding 1 because we want to come back to the source city
+
+        rute = np.ones((m, n + 1))
+
+        for ite in range(iteration):
+
+            rute[:, 0] = 1  # initial starting and ending positon of every ants '1' i.e city '1'
+
+            for i in range(m):
+
+                temp_visibility = np.array(visibility)  # creating a copy of visibility
+
+                for j in range(n - 1):
+                    # print(rute)
+
+                    combine_feature = np.zeros(5)  # intializing combine_feature array to zero
+                    cum_prob = np.zeros(5)  # intializing cummulative probability array to zeros
+
+                    cur_loc = int(rute[i, j] - 1)  # current city of the ant
+
+                    temp_visibility[:, cur_loc] = 0  # making visibility of the current city as zero
+
+                    p_feature = np.power(pheromne[cur_loc, :], beta)  # calculating pheromne feature
+                    v_feature = np.power(temp_visibility[cur_loc, :], alpha)  # calculating visibility feature
+
+                    p_feature = p_feature[:, np.newaxis]  # adding axis to make a size[5,1]
+                    v_feature = v_feature[:, np.newaxis]  # adding axis to make a size[5,1]
+
+                    combine_feature = np.multiply(p_feature, v_feature)  # calculating the combine feature
+
+                    total = np.sum(combine_feature)  # sum of all the feature
+
+                    probs = combine_feature / total  # finding probability of element probs(i) = comine_feature(i)/total
+
+                    cum_prob = np.cumsum(probs)  # calculating cummulative sum
+                    # print(cum_prob)
+                    r = np.random.random_sample()  # randon no in [0,1)
+                    # print(r)
+                    city = np.nonzero(cum_prob > r)[0][
+                               0] + 1  # finding the next city having probability higher then random(r)
+                    # print(city)
+
+                    rute[i, j + 1] = city  # adding city to route
+
+                left = list(set([i for i in range(1, n + 1)]) - set(rute[i, :-2]))[
+                    0]  # finding the last untraversed city to route
+
+                rute[i, -2] = left  # adding untraversed city to route
+
+            rute_opt = np.array(rute)  # intializing optimal route
+
+            dist_cost = np.zeros((m, 1))  # intializing total_distance_of_tour with zero
+
+            for i in range(m):
+
+                s = 0
+                for j in range(n - 1):
+                    s = s + d[int(rute_opt[i, j]) - 1, int(rute_opt[i, j + 1]) - 1]  # calcualting total tour distance
+
+                dist_cost[i] = s  # storing distance of tour for 'i'th ant at location 'i'
+
+            dist_min_loc = np.argmin(dist_cost)  # finding location of minimum of dist_cost
+            dist_min_cost = dist_cost[dist_min_loc]  # finging min of dist_cost
+
+            best_route = rute[dist_min_loc, :]  # intializing current traversed as best route
+            pheromne = (1 - e) * pheromne  # evaporation of pheromne with (1-e)
+
+            for i in range(m):
+                for j in range(n - 1):
+                    dt = 1 / dist_cost[i]
+                    pheromne[int(rute_opt[i, j]) - 1, int(rute_opt[i, j + 1]) - 1] = pheromne[
+                                                                                         int(rute_opt[i, j]) - 1, int(
+                                                                                             rute_opt[
+                                                                                                 i, j + 1]) - 1] + dt
+                    # updating the pheromne with delta_distance
+                    # delta_distance will be more with min_dist i.e adding more weight to that route  peromne
+
+        print('route of all the ants at the end :')
+        print(rute_opt)
+        print()
+        print('best path :', best_route)
+        print('cost of the best path', int(dist_min_cost[0]) + d[int(best_route[-2]) - 1, 0])
 
     @staticmethod
     def read_csv(file):

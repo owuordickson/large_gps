@@ -29,6 +29,7 @@ class GradACO:
         # self.used_segs = 0
         self.iteration_count = 0
         self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
+        # self.s_matrix = np.array([])
 
     def deposit_pheromone(self, pattern):
         lst_attr = []
@@ -61,6 +62,21 @@ class GradACO:
                 self.p_matrix[i][1] = (1 - self.e_factor) * self.p_matrix[i][1]
 
     def run_ant_colony(self):
+        # self.s_matrix = np.ones(self.d_set.d_matrix.shape, dtype=float)
+        # print(self.s_matrix)
+        min_supp = self.d_set.thd_supp
+        winner_gps = list()  # subsets
+        loser_gps = list()  # supersets
+        repeated = 0
+        it_count = 0
+        if self.d_set.no_bins:
+            return []
+        return winner_gps
+
+    def generate_random_segs(self):
+        s = self.s_matrix
+
+    def run_ant_colony_old(self):
         min_supp = self.d_set.thd_supp
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
@@ -195,14 +211,9 @@ class GradACO:
             segments = np.stack(bin_data[:, 1])
             large_col_sum = segments.sum(axis=0)
             large_rows = np.argsort(-segments[:, large_col_sum.argmax()])
-            # print(large_col_sum)
-            # print(large_rows)
-            # print(bin_data)
             bin_arr = None
             for idx in large_rows:
                 if bin_arr is None:
-                    # row_idx = large_rows[-1]
-                    # temp_idx = large_rows[-2]
                     bin_arr = np.array([bin_data[idx][2], None], dtype=object)
                     gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
                     gen_pattern.add_gradual_item(gi)
@@ -215,13 +226,6 @@ class GradACO:
                         gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
                         gen_pattern.add_gradual_item(gi)
                         gen_pattern.set_support(supp)
-
-            # print(large_col_sum.argmax())
-            # print(segments.sum(axis=0))
-            # print("\n")
-            # tbl = pd.DataFrame(data=segments)
-            # print(tbl)
-            # print("---\n\n")
 
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
