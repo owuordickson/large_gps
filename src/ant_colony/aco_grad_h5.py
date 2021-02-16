@@ -13,6 +13,7 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 
 import numpy as np
+# import pandas as pd
 from numpy import random as rand
 from common.gp import GI, GP
 from common.dataset import Dataset
@@ -25,11 +26,11 @@ class GradACO:
         self.d_set.init_gp_attributes(segs)
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
-        # self.used_segs = 0
         self.iteration_count = 0
         self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
+        # self.aco_code()
 
-    def deposit_pheromone(self, pattern):
+    def update_pheromone(self, pattern):
         lst_attr = []
         for obj in pattern.gradual_items:
             # print(obj.attribute_col)
@@ -59,7 +60,7 @@ class GradACO:
             elif symbol == '-':
                 self.p_matrix[i][1] = (1 - self.e_factor) * self.p_matrix[i][1]
 
-    def run_ant_colony(self):
+    def run_ant_colony_old(self):
         min_supp = self.d_set.thd_supp
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
@@ -87,7 +88,7 @@ class GradACO:
                         repeated += 1
                     else:
                         if gen_gp.support >= min_supp:
-                            self.deposit_pheromone(gen_gp)
+                            self.update_pheromone(gen_gp)
                             winner_gps.append(gen_gp)
                         else:
                             loser_gps.append(gen_gp)
@@ -122,6 +123,114 @@ class GradACO:
         return pattern
 
     def validate_gp(self, pattern):
+        # pattern = [('2', '+'), ('4', '+')]
+        n = self.d_set.row_count
+        min_supp = self.d_set.thd_supp
+        seg_count = 0
+        gen_pattern = GP()
+        arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
+        if len(arg) >= 2:
+            bin_data = self.d_set.valid_bins[arg.flatten()]
+            segments = np.stack(bin_data[:, 1])
+            large_col_sum = segments.sum(axis=0)
+            large_rows = np.argsort(-segments[:, large_col_sum.argmax()])
+            bin_arr = None
+            for idx in large_rows:
+                if bin_arr is None:
+                    bin_arr = np.array([bin_data[idx][2], None], dtype=object)
+                    gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
+                    gen_pattern.add_gradual_item(gi)
+                    continue
+                else:
+                    bin_arr[1] = bin_data[idx][2]
+                    temp_bin, supp = self.bin_and(bin_arr)
+                    if supp >= min_supp:
+                        bin_arr[0] = temp_bin
+                        gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
+                        gen_pattern.add_gradual_item(gi)
+                        gen_pattern.set_support(supp)
+
+        if len(gen_pattern.gradual_items) <= 1:
+            return pattern
+        else:
+            return gen_pattern
+
+    def bin_and(self, bins):
+        n = self.d_set.row_count
+        bin_1 = bins[0]
+        bin_2 = bins[1]
+        temp_bin = []
+        bin_sum = 0
+        for i in range(len(bin_1)):
+            prod = bin_1[i] * bin_2[i]
+            temp_bin.append(prod)
+            bin_sum += np.sum(prod)
+            # print(str(bin_1[i]) + ' x ' + str(bin_2[i]) + '\n')
+            # print(temp_bin)
+            # print("***")
+        temp_bin = np.array(temp_bin, dtype=object)
+        # print(temp_bin)
+        # print(np.sum(temp_bin))
+        supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+        return temp_bin, supp
+
+    @staticmethod
+    def check_anti_monotony(lst_p, pattern, subset=True):
+        result = False
+        if subset:
+            for pat in lst_p:
+                result1 = set(pattern.get_pattern()).issubset(set(pat.get_pattern()))
+                result2 = set(pattern.inv_pattern()).issubset(set(pat.get_pattern()))
+                if result1 or result2:
+                    result = True
+                    break
+        else:
+            for pat in lst_p:
+                result1 = set(pattern.get_pattern()).issuperset(set(pat.get_pattern()))
+                result2 = set(pattern.inv_pattern()).issuperset(set(pat.get_pattern()))
+                if result1 or result2:
+                    result = True
+                    break
+        return result
+
+    @staticmethod
+    def is_duplicate(pattern, lst_winners, lst_losers):
+        for pat in lst_losers:
+            if set(pattern.get_pattern()) == set(pat.get_pattern()) or \
+                    set(pattern.inv_pattern()) == set(pat.get_pattern()):
+                return True
+        for pat in lst_winners:
+            if set(pattern.get_pattern()) == set(pat.get_pattern()) or \
+                    set(pattern.inv_pattern()) == set(pat.get_pattern()):
+                return True
+        return False
+
+    # ADDED TEST CODES
+
+    def generate_d(self):
+        # 1. Initialize an empty d-matrix
+        v_bins = self.d_set.valid_bins
+        n = v_bins.shape[0]
+        d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
+        for k in range(self.d_set.seg_count):
+            # 2. For each segment do a binary AND
+            # print(v_bins[:, 2][k])
+            # print("... next ...")
+            for i in range(n):
+                for j in range(n):
+                    if v_bins[i][0][0] == v_bins[j][0][0]:
+                        continue
+                    else:
+                        d[i][j] += np.sum(np.multiply(v_bins[i][2][k], v_bins[j][2][k]))
+            # print("Seg " + str(k))
+            # print(d)
+            # print("...\n")
+        print(v_bins[:, 0])
+        print(d)
+        print("---\n")
+        return d
+
+    def validate_gp_wait(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
         n = self.d_set.row_count
         min_supp = self.d_set.thd_supp
@@ -180,33 +289,124 @@ class GradACO:
         else:
             return gen_pattern
 
-    @staticmethod
-    def check_anti_monotony(lst_p, pattern, subset=True):
-        result = False
-        if subset:
-            for pat in lst_p:
-                result1 = set(pattern.get_pattern()).issubset(set(pat.get_pattern()))
-                result2 = set(pattern.inv_pattern()).issubset(set(pat.get_pattern()))
-                if result1 or result2:
-                    result = True
-                    break
-        else:
-            for pat in lst_p:
-                result1 = set(pattern.get_pattern()).issuperset(set(pat.get_pattern()))
-                result2 = set(pattern.inv_pattern()).issuperset(set(pat.get_pattern()))
-                if result1 or result2:
-                    result = True
-                    break
-        return result
+    def run_ant_colony(self):
+        d = self.generate_d()
+        min_supp = self.d_set.thd_supp
+        winner_gps = list()  # subsets
+        loser_gps = list()  # supersets
+        repeated = 0
+        it_count = 0
+        if self.d_set.no_bins:
+            return []
+        return winner_gps
 
-    @staticmethod
-    def is_duplicate(pattern, lst_winners, lst_losers):
-        for pat in lst_losers:
-            if set(pattern.get_pattern()) == set(pat.get_pattern()) or \
-                    set(pattern.inv_pattern()) == set(pat.get_pattern()):
-                return True
-        for pat in lst_winners:
-            if set(pattern.get_pattern()) == set(pat.get_pattern()) or \
-                    set(pattern.inv_pattern()) == set(pat.get_pattern()):
-                return True
-        return False
+    def aco_code_n(self):
+        d = self.d_matrix
+        p = self.p_matrix
+        e = .5  # evaporation factor
+
+        with np.errstate(divide='ignore'):
+            # calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+            visibility = 1/d
+            visibility[visibility == np.inf] = 0
+            print(visibility)
+
+    def aco_code(self):
+        d = self.generate_d()
+        iteration = 100
+        n_ants = 8
+        n_city = 8
+        m = n_ants
+        n = n_city
+        e = .5  # evaporation factor
+        alpha = 1  # pheromone factor
+        beta = 2  # visibility factor
+
+        # calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+        visibility = 1/d
+        visibility[visibility == np.inf] = 0
+
+        # intializing pheromne present at the paths to the cities
+
+        pheromne = .1 * np.ones((m, n))
+
+        # intializing the rute of the ants with size rute(n_ants,n_citys+1)
+        # note adding 1 because we want to come back to the source city
+
+        rute = np.ones((m, n + 1))
+
+        for ite in range(iteration):
+
+            rute[:, 0] = 1  # initial starting and ending positon of every ants '1' i.e city '1'
+
+            for i in range(m):
+
+                temp_visibility = np.array(visibility)  # creating a copy of visibility
+
+                for j in range(n - 1):
+                    # print(rute)
+
+                    cur_loc = int(rute[i, j] - 1)  # current city of the ant
+
+                    temp_visibility[:, cur_loc] = 0  # making visibility of the current city as zero
+
+                    p_feature = np.power(pheromne[cur_loc, :], beta)  # calculating pheromne feature
+                    v_feature = np.power(temp_visibility[cur_loc, :], alpha)  # calculating visibility feature
+
+                    p_feature = p_feature[:, np.newaxis]  # adding axis to make a size[5,1]
+                    v_feature = v_feature[:, np.newaxis]  # adding axis to make a size[5,1]
+
+                    combine_feature = np.multiply(p_feature, v_feature)  # calculating the combine feature
+
+                    total = np.sum(combine_feature)  # sum of all the feature
+
+                    probs = combine_feature / total  # finding probability of element probs(i) = comine_feature(i)/total
+
+                    cum_prob = np.cumsum(probs)  # calculating cummulative sum
+                    # print(cum_prob)
+                    r = np.random.random_sample()  # randon no in [0,1)
+                    # print(r)
+                    city = np.nonzero(cum_prob > r)[0][
+                               0] + 1  # finding the next city having probability higher then random(r)
+                    # print(city)
+
+                    rute[i, j + 1] = city  # adding city to route
+
+                left = list(set([i for i in range(1, n + 1)]) - set(rute[i, :-2]))[
+                    0]  # finding the last untraversed city to route
+
+                rute[i, -2] = left  # adding untraversed city to route
+
+            rute_opt = np.array(rute)  # intializing optimal route
+
+            dist_cost = np.zeros((m, 1))  # intializing total_distance_of_tour with zero
+
+            for i in range(m):
+
+                s = 0
+                for j in range(n - 1):
+                    s = s + d[int(rute_opt[i, j]) - 1, int(rute_opt[i, j + 1]) - 1]  # calcualting total tour distance
+
+                dist_cost[i] = s  # storing distance of tour for 'i'th ant at location 'i'
+
+            dist_min_loc = np.argmin(dist_cost)  # finding location of minimum of dist_cost
+            dist_min_cost = dist_cost[dist_min_loc]  # finging min of dist_cost
+
+            best_route = rute[dist_min_loc, :]  # intializing current traversed as best route
+            pheromne = (1 - e) * pheromne  # evaporation of pheromne with (1-e)
+
+            for i in range(m):
+                for j in range(n - 1):
+                    dt = 1 / dist_cost[i]
+                    pheromne[int(rute_opt[i, j]) - 1, int(rute_opt[i, j + 1]) - 1] = pheromne[
+                                                                                         int(rute_opt[i, j]) - 1, int(
+                                                                                             rute_opt[
+                                                                                                 i, j + 1]) - 1] + dt
+                    # updating the pheromne with delta_distance
+                    # delta_distance will be more with min_dist i.e adding more weight to that route  peromne
+
+        print('route of all the ants at the end :')
+        print(rute_opt)
+        print()
+        print('best path :', best_route)
+        print('cost of the best path', int(dist_min_cost[0]) + d[int(best_route[-2]) - 1, 0])
