@@ -110,48 +110,11 @@ class Dataset:
         # transpose csv array data
         attr_data = self.data.copy().T
         # construct and store 1-item_set valid bins
-        self.construct_bins_new(attr_data, seg_no)
+        self.construct_bins(attr_data, seg_no)
         attr_data = None
         self.aco_code()
 
-    def construct_bins(self, attr_data):
-        # generate tuple indices
-        n = self.row_count
-        valid_bins = list()
-        invalid_bins = list()
-        for col in self.attr_cols:
-            col_data = np.array(attr_data[col], dtype=float)
-            incr = np.array((col, '+'), dtype='i, S1')
-            decr = np.array((col, '-'), dtype='i, S1')
-            # arr_pos = [col_data[i] > col_data[j] for i in range(n) for j in range(i + 1, n)]
-            # arr_neg = [col_data[i] < col_data[j] for i in range(n) for j in range(i + 1, n)]
-            arr_pos = []  # np.zeros((n), dtype=bool)
-            arr_neg = []  # np.zeros((n), dtype=bool)
-            for i in range(n):
-                for j in range(i + 1, n):
-                    if col_data[i] > col_data[j]:
-                        arr_pos.append(True)
-                        arr_neg.append(False)
-                    else:
-                        if col_data[i] < col_data[j]:
-                            arr_neg.append(True)
-                            arr_pos.append(False)
-            arr_pos = np.array(arr_pos)
-            arr_neg = np.array(arr_neg)
-            supp = float(np.sum(arr_pos)) / float(n * (n - 1.0) / 2.0)
-            if supp < self.thd_supp:
-                invalid_bins.append(incr)
-            else:
-                valid_bins.append(np.array([incr.tolist(), arr_pos], dtype=object))
-
-            supp = float(np.sum(arr_neg)) / float(n * (n - 1.0) / 2.0)
-            if supp < self.thd_supp:
-                invalid_bins.append(decr)
-            else:
-                valid_bins.append(np.array([decr.tolist(), arr_neg], dtype=object))
-        print(np.array(valid_bins))
-
-    def construct_bins_new(self, attr_data, seg_no):
+    def construct_bins(self, attr_data, seg_no):
         # execute binary rank to calculate support of pattern
         # valid_bins = list()  # numpy is very slow for append operations
         # n = self.attr_size
@@ -182,7 +145,7 @@ class Dataset:
             self.d_matrix = np.stack(self.valid_bins[:, 1])
             self.p_matrix = np.ones(self.d_matrix.shape, dtype=float)
             print(self.d_matrix)
-            # print(self.p_matrix)
+            print(self.d_matrix.T)
             print("-------\n\n")
 
     def bin_rank(self, arr, seg_no):
@@ -220,10 +183,18 @@ class Dataset:
                 lst_pos = [np.array(lst_pos_sum, dtype=int), np.array(lst_pos, dtype=object)]
             return lst_pos, lst_neg
 
-    def aco_code(self):
+    def aco_code_n(self):
         d = self.d_matrix
+        p = self.p_matrix
+        e = .5  # evaporation factor
 
-    def aco_code_git(self):
+        with np.errstate(divide='ignore'):
+            # calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+            visibility = 1/d
+            visibility[visibility == np.inf] = 0
+            print(visibility)
+
+    def aco_code(self):
         d = self.d_matrix
         iteration = 100
         n_ants = 8
@@ -237,13 +208,6 @@ class Dataset:
         # calculating the visibility of the next city visibility(i,j)=1/d(i,j)
         visibility = 1/d
         visibility[visibility == np.inf] = 0
-
-        # intializing pheromne present at the paths to the cities
-
-        pheromne = .1 * np.ones((m, n))
-        # intializing the rute of the ants with size rute(n_ants,n_citys+1)
-        # note adding 1 because we want to come back to the source city
-        rute = np.ones((m, n + 1))
 
         # intializing pheromne present at the paths to the cities
 
@@ -264,9 +228,6 @@ class Dataset:
 
                 for j in range(n - 1):
                     # print(rute)
-
-                    combine_feature = np.zeros(5)  # intializing combine_feature array to zero
-                    cum_prob = np.zeros(5)  # intializing cummulative probability array to zeros
 
                     cur_loc = int(rute[i, j] - 1)  # current city of the ant
 
@@ -326,6 +287,7 @@ class Dataset:
                                                                                                  i, j + 1]) - 1] + dt
                     # updating the pheromne with delta_distance
                     # delta_distance will be more with min_dist i.e adding more weight to that route  peromne
+
 
         print('route of all the ants at the end :')
         print(rute_opt)
