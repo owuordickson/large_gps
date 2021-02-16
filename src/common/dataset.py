@@ -121,8 +121,16 @@ class Dataset:
                 # valid_bins.append(np.array([incr.tolist(), arr_pos[0], arr_pos[1]], dtype=object))
                 grp_name = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
                 grp = h5f.create_group(grp_name)
-                adict = dict(attr=incr.tolist(), segs=arr_pos[0], bin=arr_pos[1].astype(np.bool).dtype)
-                for k,v in adict.items():
+                temp_dict = dict(attr=incr.tolist(), segs=arr_pos[0])#, bin=arr_pos[1])
+                for k, v in temp_dict.items():
+                    grp.create_dataset(k, data=v)
+                bins_zip = zip(np.arange(arr_pos[0].size), arr_pos[1])
+                # bins_dict = dict(bins_zip)
+                grp = h5f.create_group(grp_name + '/bins')
+                for k, v in bins_zip:
+                    print(k)
+                    print(v)
+                    print("---")
                     grp.create_dataset(k, data=v)
                 seg_sums.append(arr_pos[0])
                 valid_count += 1
@@ -133,8 +141,13 @@ class Dataset:
                 grp_name = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
                 grp = h5f.create_group(grp_name)
                 # self.add_h5_dataset(grp, np.array([decr.tolist(), arr_neg[1]]))
-                adict = dict(attr=decr.tolist(), segs=arr_neg[0], bin=arr_neg[1].astype(np.bool).dtype)
-                for k,v in adict.items():
+                temp_dict = dict(attr=decr.tolist(), segs=arr_neg[0])#, bin=arr_neg[1])
+                for k, v in temp_dict.items():
+                    grp.create_dataset(k, data=v)
+                bins_zip = zip(np.arange(arr_neg[0].size), arr_neg[1])
+                # bins_dict = dict(bins_zip)
+                grp = h5f.create_group(grp_name + '/bins')
+                for k, v in bins_zip:
                     grp.create_dataset(k, data=v)
                 seg_sums.append(arr_neg[0])
                 valid_count += 1
@@ -182,11 +195,11 @@ class Dataset:
             if sup_neg < self.thd_supp:
                 lst_neg = None
             else:
-                lst_neg = [np.array(lst_neg_sum, dtype=int), np.array(lst_neg, dtype=object)]
+                lst_neg = [np.array(lst_neg_sum, dtype=int), lst_neg]
             if sup_pos < self.thd_supp:
                 lst_pos = None
             else:
-                lst_pos = [np.array(lst_pos_sum, dtype=int), np.array(lst_pos, dtype=object)]
+                lst_pos = [np.array(lst_pos_sum, dtype=int), lst_pos]
             return lst_pos, lst_neg
 
     def init_h5_groups(self):
