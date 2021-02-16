@@ -43,8 +43,8 @@ class Dataset:
             # self.step_name = ''
             self.invalid_bins = np.array([])
             self.valid_bins = np.array([])
-            self.d_matrix = np.array([])
-            self.p_matrix = np.array([])
+            # self.d_matrix = np.array([])
+            # self.p_matrix = np.array([])
             data = None
             # self.init_attributes()
 
@@ -112,7 +112,7 @@ class Dataset:
         # construct and store 1-item_set valid bins
         self.construct_bins(attr_data, seg_no)
         attr_data = None
-        self.aco_code()
+        # self.aco_code()
 
     def construct_bins(self, attr_data, seg_no):
         # execute binary rank to calculate support of pattern
@@ -140,13 +140,13 @@ class Dataset:
             self.no_bins = True
         else:
             self.seg_count = self.valid_bins[0][1].size
-            valid_attr_count = self.valid_bins.size
+            # valid_attr_count = self.valid_bins.size
             # self.d_matrix = np.zeros(valid_attr_count, self.seg_count)
-            self.d_matrix = np.stack(self.valid_bins[:, 1])
-            self.p_matrix = np.ones(self.d_matrix.shape, dtype=float)
-            print(self.d_matrix)
-            print(self.d_matrix.T)
-            print("-------\n\n")
+            # self.d_matrix = np.stack(self.valid_bins[:, 1])
+            # self.p_matrix = np.ones(self.d_matrix.shape, dtype=float)
+            # print(self.d_matrix)
+            # print(self.d_matrix.T)
+            # print("-------\n\n")
 
     def bin_rank(self, arr, seg_no):
         n = self.row_count
