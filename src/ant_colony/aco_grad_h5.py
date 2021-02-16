@@ -10,8 +10,7 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
-
-
+import h5py
 import numpy as np
 # import pandas as pd
 from numpy import random as rand
@@ -27,7 +26,13 @@ class GradACO:
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
-        self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
+        grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
+        p_matrix = self.d_set.read_h5_dataset(grp)
+        if np.sum(p_matrix) > 0:
+            self.p_matrix = p_matrix
+        else:
+            self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
+        # self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
         # self.aco_code()
 
     def update_pheromone(self, pattern):
@@ -99,6 +104,8 @@ class GradACO:
                     repeated += 1
             it_count += 1
         self.iteration_count = it_count
+        grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
+        self.d_set.add_h5_dataset(grp, self.p_matrix)
         return winner_gps
 
     def generate_random_gp(self):
@@ -207,24 +214,26 @@ class GradACO:
     # ADDED TEST CODES
 
     def generate_d(self):
-        # 1. Initialize an empty d-matrix
-        v_bins = self.d_set.valid_bins
-        n = v_bins.shape[0]
+        # 1. Fetch
+        grp = 'dataset/' + self.d_set.step_name + '/valid_bins/'  # + gi.as_string()
+        h5f = h5py.File(self.d_set.h5_file, 'r')
+        print(h5f[grp])
+        # temp = self.d_set.read_h5_dataset(grp)
+        # v_bins = self.d_set.valid_bins
+
+        # 2. Initialize an empty d-matrix
+        n = (self.d_set.attr_cols.size * 2) - self.d_set.invalid_bins.size  # v_bins.shape[0]
         d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
         for k in range(self.d_set.seg_count):
+            print(k)
             # 2. For each segment do a binary AND
-            # print(v_bins[:, 2][k])
-            # print("... next ...")
-            for i in range(n):
-                for j in range(n):
-                    if v_bins[i][0][0] == v_bins[j][0][0]:
-                        continue
-                    else:
-                        d[i][j] += np.sum(np.multiply(v_bins[i][2][k], v_bins[j][2][k]))
-            # print("Seg " + str(k))
-            # print(d)
-            # print("...\n")
-        print(v_bins[:, 0])
+            # for i in range(n):
+             #   for j in range(n):
+             #       if v_bins[i][0][0] == v_bins[j][0][0]:
+             #           continue
+             #       else:
+             #           d[i][j] += np.sum(np.multiply(v_bins[i][2][k], v_bins[j][2][k]))
+        print(n)
         print(d)
         print("---\n")
         return d
@@ -300,6 +309,8 @@ class GradACO:
         it_count = 0
         if self.d_set.no_bins:
             return []
+        grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
+        self.d_set.add_h5_dataset(grp, self.p_matrix)
         return winner_gps
 
     def aco_code_n(self):

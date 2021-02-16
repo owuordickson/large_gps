@@ -31,9 +31,10 @@ class Dataset:
         if os.path.exists(self.h5_file):
             print("Fetching data from h5 file")
             h5f = h5py.File(self.h5_file, 'r')
-            self.title = h5f['dataset/titles'][:]
+            self.titles = h5f['dataset/titles'][:]
             self.time_cols = h5f['dataset/time_cols'][:]
             self.attr_cols = h5f['dataset/attr_cols'][:]
+            self.data = h5f['dataset/data'][:]  # TO BE REMOVED
             size = h5f['dataset/size'][:]
             self.col_count = size[0]
             self.row_count = size[1]
@@ -44,7 +45,8 @@ class Dataset:
             self.seg_count = self.seg_sums[0].size
             h5f.close()
             self.thd_supp = min_sup
-            self.data = None
+            self.no_bins = True  # self.d_set.attr_cols.size - self.d_set.invalid_bins.size
+            # self.data = None
         else:
             self.thd_supp = min_sup
             self.titles, self.data = Dataset.read_csv(file_path)
@@ -86,15 +88,18 @@ class Dataset:
 
     def init_gp_attributes(self, seg_no, attr_data=None):
         # (check) implement parallel multiprocessing
-        self.attr_size = len(attr_data[self.attr_cols[0]])
-        self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
 
         # 1. Transpose csv array data
         if attr_data is None:
             attr_data = self.data.T
+            self.attr_size = self.row_count
+        else:
+            self.attr_size = len(attr_data[self.attr_cols[0]])
+        self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
 
         # 2. Initialize h5 groups to store class attributes
         self.init_h5_groups()
+        h5f = h5py.File(self.h5_file, 'r+')
 
         # 3. Construct and store 1-item_set valid bins
         # valid_bins = list()
@@ -113,16 +118,23 @@ class Dataset:
                 invalid_bins.append(incr)
             else:
                 # valid_bins.append(np.array([incr.tolist(), arr_pos[0], arr_pos[1]], dtype=object))
-                grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
-                self.add_h5_dataset(grp, arr_pos[1])
+                grp_name = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
+                grp = h5f.create_group(grp_name)
+                adict = dict(attr=incr.tolist(), segs=arr_pos[0])#, bin=arr_pos[1])
+                for k,v in adict.items():
+                    grp.create_dataset(k, data=v)
                 seg_sums.append(arr_pos[0])
                 valid_count += 1
             if arr_neg is None:
                 invalid_bins.append(decr)
             else:
                 # valid_bins.append(np.array([decr.tolist(), arr_neg[0], arr_neg[1]], dtype=object))
-                grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
-                self.add_h5_dataset(grp, arr_neg[1])
+                grp_name = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
+                grp = h5f.create_group(grp_name)
+                # self.add_h5_dataset(grp, np.array([decr.tolist(), arr_neg[1]]))
+                adict = dict(attr=decr.tolist(), segs=arr_neg[0])  # , bin=arr_neg[1])
+                for k,v in adict.items():
+                    grp.create_dataset(k, data=v)
                 seg_sums.append(arr_neg[0])
                 valid_count += 1
 
@@ -139,6 +151,7 @@ class Dataset:
             self.no_bins = True
         else:
             self.seg_count = self.seg_sums[0].size
+        h5f.close()
         gc.collect()
 
     def bin_rank(self, arr, step):
@@ -181,8 +194,9 @@ class Dataset:
         else:
             h5f = h5py.File(self.h5_file, 'w')
             grp = h5f.require_group('dataset')
-            grp.create_dataset('titles', data=self.title)
-            grp.create_dataset('data', data=np.array(self.data.copy()).astype('S'), compression="gzip", compression_opts=9)
+            grp.create_dataset('titles', data=self.titles)
+            grp.create_dataset('data', data=np.array(self.data.copy()).astype('S'), compression="gzip",
+                               compression_opts=9)
             grp.create_dataset('time_cols', data=self.time_cols)
             grp.create_dataset('attr_cols', data=self.attr_cols)
             h5f.close()
