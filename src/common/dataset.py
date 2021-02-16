@@ -24,29 +24,27 @@ class Dataset:
 
     def __init__(self, file_path, min_sup=0):
         data = Dataset.read_csv(file_path)
-        if len(data) <= 1:
-            self.data = np.array([])
-            print("csv file read error")
-            raise Exception("Unable to read csv file or file has no data")
-        else:
-            print("Data fetched from csv file")
-            self.thd_supp = min_sup
-            self.data = np.array([])
-            self.titles = self.get_titles(data)
-            self.col_count = self.get_cols_count()
-            self.row_count = self.get_size()
-            self.time_cols = self.get_time_cols()
-            self.attr_cols = self.get_attr_cols()
-            self.no_bins = False
-            self.seg_count = 1
-            # self.attr_size = 0
-            # self.step_name = ''
-            self.invalid_bins = np.array([])
-            self.valid_bins = np.array([])
-            # self.d_matrix = np.array([])
-            # self.p_matrix = np.array([])
-            data = None
-            # self.init_attributes()
+        # if len(data) <= 1:
+        #    self.data = np.array([])
+        #    print("csv file read error")
+        #    raise Exception("Unable to read csv file or file has no data")
+        # else:
+        #    print("Data fetched from csv file")
+        self.thd_supp = min_sup
+        self.data = np.array([])
+        self.titles = self.get_titles(data)
+        self.col_count = self.get_cols_count()
+        self.row_count = self.get_size()
+        self.time_cols = self.get_time_cols()
+        self.attr_cols = self.get_attr_cols()
+        self.no_bins = False
+        self.seg_count = 1
+        # self.step_name = ''
+        self.invalid_bins = np.array([])
+        self.valid_bins = np.array([])
+        # self.d_matrix = np.array([])
+        # self.p_matrix = np.array([])
+        # self.init_attributes()
 
     def get_titles(self, data):
         # data = self.raw_data
@@ -298,13 +296,23 @@ class Dataset:
     @staticmethod
     def read_csv(file):
         # 1. retrieve data-set from file
-        with open(file, 'r') as f:
-            dialect = csv.Sniffer().sniff(f.readline(), delimiters=";,' '\t")
-            f.seek(0)
-            reader = csv.reader(f, dialect)
-            temp = list(reader)
-            f.close()
-        return temp
+        try:
+            with open(file, 'r') as f:
+                dialect = csv.Sniffer().sniff(f.readline(), delimiters=";,' '\t")
+                f.seek(0)
+                reader = csv.reader(f, dialect)
+                temp = list(reader)
+                f.close()
+
+            if len(temp) <= 1:
+                print("Unable to read CSV file")
+                raise Exception("CSV file read error. File has little or no data")
+            else:
+                print("Data fetched from CSV file")
+            return temp
+        except Exception as error:
+            print("Unable to read CSV file")
+            raise Exception("CSV file read error. " + str(error))
 
     @staticmethod
     def test_time(date_str):

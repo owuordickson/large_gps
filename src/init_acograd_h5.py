@@ -62,9 +62,8 @@ def init_algorithm(f_path, min_supp, cores, seg_size=2):
         # wr_line += str(ac.p_matrix)
         # ac.plot_pheromone_matrix()
         return wr_line
-    except ArithmeticError as error:
+    except Exception as error:
         wr_line = "Failed: " + str(error)
-        print(error)
         return wr_line
 
 
@@ -131,4 +130,4 @@ if __name__ == "__main__":
     wr_text += str(res_text)
     f_name = str('res_acoh5' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
-    # print(wr_text)
+    print(wr_text)
