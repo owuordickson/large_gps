@@ -31,7 +31,7 @@ class GradACO:
         self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
         # self.s_matrix = np.array([])
 
-    def deposit_pheromone(self, pattern):
+    def update_pheromone(self, pattern):
         lst_attr = []
         for obj in pattern.gradual_items:
             # print(obj.attribute_col)
@@ -61,21 +61,6 @@ class GradACO:
             elif symbol == '-':
                 self.p_matrix[i][1] = (1 - self.e_factor) * self.p_matrix[i][1]
 
-    def run_ant_colony_ano(self):
-        # self.s_matrix = np.ones(self.d_set.d_matrix.shape, dtype=float)
-        # print(self.s_matrix)
-        min_supp = self.d_set.thd_supp
-        winner_gps = list()  # subsets
-        loser_gps = list()  # supersets
-        repeated = 0
-        it_count = 0
-        if self.d_set.no_bins:
-            return []
-        return winner_gps
-
-    def generate_random_segs(self):
-        s = self.s_matrix
-
     def run_ant_colony(self):
         min_supp = self.d_set.thd_supp
         winner_gps = list()  # subsets
@@ -103,7 +88,7 @@ class GradACO:
                         repeated += 1
                     else:
                         if gen_gp.support >= min_supp:
-                            self.deposit_pheromone(gen_gp)
+                            self.update_pheromone(gen_gp)
                             winner_gps.append(gen_gp)
                         else:
                             loser_gps.append(gen_gp)
@@ -136,68 +121,6 @@ class GradACO:
                 continue
             pattern.add_gradual_item(temp)
         return pattern
-
-    def validate_gp_wait(self, pattern):
-        # pattern = [('2', '+'), ('4', '+')]
-        n = self.d_set.row_count
-        min_supp = self.d_set.thd_supp
-        seg_count = 0
-        gen_pattern = GP()
-        arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
-        if len(arg) >= 2:
-            bin_data = self.d_set.valid_bins[arg.flatten()]
-            seg_sum = np.sum(bin_data[:, 1], axis=0)
-            seg_order = np.argsort(-seg_sum)
-            bin_arr = bin_data[:, 2]
-
-            # print(seg_order)
-            # print(bin_data)
-            # print("\n")
-            # print(bin_arr)
-            # temp_bin = bin_arr[0][seg_order[0]]
-            bin_sum = 0
-            for i in seg_order:
-                curr_bin = None
-                gi_1 = None
-                temp_sum = 0
-                for j in range(len(bin_arr)):
-                    if curr_bin is None:
-                        curr_bin = bin_arr[j][i]
-                        gi_1 = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
-                    else:
-                        temp_bin = np.multiply(curr_bin, bin_arr[j][i])
-                        temp_sum = np.sum(temp_bin)
-                        curr_bin = np.copy(temp_bin)
-
-                        # bin_sum += temp_sum
-                        # supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)  # TO BE REMOVED
-                        # print(temp_bin)
-                        # print("\n")
-                        # print(str(i) + " -- sum: " + str(temp_sum) + ' | total: ' + str(bin_sum))
-                        # print("Support: " + str(supp))
-
-                        if not gen_pattern.contains(gi_1):
-                            gen_pattern.add_gradual_item(gi_1)
-                        gi_2 = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
-                        if not gen_pattern.contains(gi_2):
-                            # print(gi_2.to_string())
-                            # print(gen_pattern.to_string())
-                            gen_pattern.add_gradual_item(gi_2)
-                        supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)
-                        gen_pattern.set_support(supp)
-                bin_sum += temp_sum
-                seg_count += 1
-                supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-                if supp >= min_supp:
-                    # print("stopped at: " + str(seg_count))
-                    break
-        # print(gen_pattern.to_string())
-        # print("----\n\n")
-        # self.used_segs = seg_count
-        if len(gen_pattern.gradual_items) <= 1:
-            return pattern
-        else:
-            return gen_pattern
 
     def validate_gp(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
@@ -281,3 +204,194 @@ class GradACO:
                     set(pattern.inv_pattern()) == set(pat.get_pattern()):
                 return True
         return False
+
+    # ADDED TEST CODES
+
+    def validate_gp_wait(self, pattern):
+        # pattern = [('2', '+'), ('4', '+')]
+        n = self.d_set.row_count
+        min_supp = self.d_set.thd_supp
+        seg_count = 0
+        gen_pattern = GP()
+        arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
+        if len(arg) >= 2:
+            bin_data = self.d_set.valid_bins[arg.flatten()]
+            seg_sum = np.sum(bin_data[:, 1], axis=0)
+            seg_order = np.argsort(-seg_sum)
+            bin_arr = bin_data[:, 2]
+
+            # print(seg_order)
+            # print(bin_data)
+            # print("\n")
+            # print(bin_arr)
+            # temp_bin = bin_arr[0][seg_order[0]]
+            bin_sum = 0
+            for i in seg_order:
+                curr_bin = None
+                gi_1 = None
+                temp_sum = 0
+                for j in range(len(bin_arr)):
+                    if curr_bin is None:
+                        curr_bin = bin_arr[j][i]
+                        gi_1 = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
+                    else:
+                        temp_bin = np.multiply(curr_bin, bin_arr[j][i])
+                        temp_sum = np.sum(temp_bin)
+                        curr_bin = np.copy(temp_bin)
+
+                        # bin_sum += temp_sum
+                        # supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)  # TO BE REMOVED
+                        # print(temp_bin)
+                        # print("\n")
+                        # print(str(i) + " -- sum: " + str(temp_sum) + ' | total: ' + str(bin_sum))
+                        # print("Support: " + str(supp))
+
+                        if not gen_pattern.contains(gi_1):
+                            gen_pattern.add_gradual_item(gi_1)
+                        gi_2 = GI(bin_data[j][0][0], bin_data[j][0][1].decode())
+                        if not gen_pattern.contains(gi_2):
+                            # print(gi_2.to_string())
+                            # print(gen_pattern.to_string())
+                            gen_pattern.add_gradual_item(gi_2)
+                        supp = float(bin_sum + temp_sum) / float(n * (n - 1.0) / 2.0)
+                        gen_pattern.set_support(supp)
+                bin_sum += temp_sum
+                seg_count += 1
+                supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+                if supp >= min_supp:
+                    # print("stopped at: " + str(seg_count))
+                    break
+        # print(gen_pattern.to_string())
+        # print("----\n\n")
+        # self.used_segs = seg_count
+        if len(gen_pattern.gradual_items) <= 1:
+            return pattern
+        else:
+            return gen_pattern
+
+    def run_ant_colony_ano(self):
+        # self.s_matrix = np.ones(self.d_set.d_matrix.shape, dtype=float)
+        # print(self.s_matrix)
+        min_supp = self.d_set.thd_supp
+        winner_gps = list()  # subsets
+        loser_gps = list()  # supersets
+        repeated = 0
+        it_count = 0
+        if self.d_set.no_bins:
+            return []
+        return winner_gps
+
+    def generate_random_segs(self):
+        s = self.s_matrix
+
+    def aco_code_n(self):
+        d = self.d_matrix
+        p = self.p_matrix
+        e = .5  # evaporation factor
+
+        with np.errstate(divide='ignore'):
+            # calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+            visibility = 1/d
+            visibility[visibility == np.inf] = 0
+            print(visibility)
+
+    def aco_code(self):
+        d = self.d_matrix
+        iteration = 100
+        n_ants = 8
+        n_city = 3
+        m = n_ants
+        n = n_city
+        e = .5  # evaporation factor
+        alpha = 1  # pheromone factor
+        beta = 2  # visibility factor
+
+        # calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+        visibility = 1/d
+        visibility[visibility == np.inf] = 0
+
+        # intializing pheromne present at the paths to the cities
+
+        pheromne = .1 * np.ones((m, n))
+
+        # intializing the rute of the ants with size rute(n_ants,n_citys+1)
+        # note adding 1 because we want to come back to the source city
+
+        rute = np.ones((m, n + 1))
+
+        for ite in range(iteration):
+
+            rute[:, 0] = 1  # initial starting and ending positon of every ants '1' i.e city '1'
+
+            for i in range(m):
+
+                temp_visibility = np.array(visibility)  # creating a copy of visibility
+
+                for j in range(n - 1):
+                    # print(rute)
+
+                    cur_loc = int(rute[i, j] - 1)  # current city of the ant
+
+                    temp_visibility[:, cur_loc] = 0  # making visibility of the current city as zero
+
+                    p_feature = np.power(pheromne[cur_loc, :], beta)  # calculating pheromne feature
+                    v_feature = np.power(temp_visibility[cur_loc, :], alpha)  # calculating visibility feature
+
+                    p_feature = p_feature[:, np.newaxis]  # adding axis to make a size[5,1]
+                    v_feature = v_feature[:, np.newaxis]  # adding axis to make a size[5,1]
+
+                    combine_feature = np.multiply(p_feature, v_feature)  # calculating the combine feature
+
+                    total = np.sum(combine_feature)  # sum of all the feature
+
+                    probs = combine_feature / total  # finding probability of element probs(i) = comine_feature(i)/total
+
+                    cum_prob = np.cumsum(probs)  # calculating cummulative sum
+                    # print(cum_prob)
+                    r = np.random.random_sample()  # randon no in [0,1)
+                    # print(r)
+                    city = np.nonzero(cum_prob > r)[0][
+                               0] + 1  # finding the next city having probability higher then random(r)
+                    # print(city)
+
+                    rute[i, j + 1] = city  # adding city to route
+
+                left = list(set([i for i in range(1, n + 1)]) - set(rute[i, :-2]))[
+                    0]  # finding the last untraversed city to route
+
+                rute[i, -2] = left  # adding untraversed city to route
+
+            rute_opt = np.array(rute)  # intializing optimal route
+
+            dist_cost = np.zeros((m, 1))  # intializing total_distance_of_tour with zero
+
+            for i in range(m):
+
+                s = 0
+                for j in range(n - 1):
+                    s = s + d[int(rute_opt[i, j]) - 1, int(rute_opt[i, j + 1]) - 1]  # calcualting total tour distance
+
+                dist_cost[i] = s  # storing distance of tour for 'i'th ant at location 'i'
+
+            dist_min_loc = np.argmin(dist_cost)  # finding location of minimum of dist_cost
+            dist_min_cost = dist_cost[dist_min_loc]  # finging min of dist_cost
+
+            best_route = rute[dist_min_loc, :]  # intializing current traversed as best route
+            pheromne = (1 - e) * pheromne  # evaporation of pheromne with (1-e)
+
+            for i in range(m):
+                for j in range(n - 1):
+                    dt = 1 / dist_cost[i]
+                    pheromne[int(rute_opt[i, j]) - 1, int(rute_opt[i, j + 1]) - 1] = pheromne[
+                                                                                         int(rute_opt[i, j]) - 1, int(
+                                                                                             rute_opt[
+                                                                                                 i, j + 1]) - 1] + dt
+                    # updating the pheromne with delta_distance
+                    # delta_distance will be more with min_dist i.e adding more weight to that route  peromne
+
+
+        print('route of all the ants at the end :')
+        print(rute_opt)
+        print()
+        print('best path :', best_route)
+        print('cost of the best path', int(dist_min_cost[0]) + d[int(best_route[-2]) - 1, 0])
