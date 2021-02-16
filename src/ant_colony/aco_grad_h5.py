@@ -26,10 +26,9 @@ class GradACO:
         self.d_set.init_gp_attributes(segs)
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
-        # self.used_segs = 0
         self.iteration_count = 0
         self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
-        # self.s_matrix = np.array([])
+        # self.aco_code()
 
     def update_pheromone(self, pattern):
         lst_attr = []
@@ -61,7 +60,7 @@ class GradACO:
             elif symbol == '-':
                 self.p_matrix[i][1] = (1 - self.e_factor) * self.p_matrix[i][1]
 
-    def run_ant_colony(self):
+    def run_ant_colony_old(self):
         min_supp = self.d_set.thd_supp
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
@@ -207,6 +206,29 @@ class GradACO:
 
     # ADDED TEST CODES
 
+    def generate_d(self):
+        # 1. Initialize an empty d-matrix
+        v_bins = self.d_set.valid_bins
+        n = v_bins.shape[0]
+        d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
+        for k in range(self.d_set.seg_count):
+            # 2. For each segment do a binary AND
+            # print(v_bins[:, 2][k])
+            # print("... next ...")
+            for i in range(n):
+                for j in range(n):
+                    if v_bins[i][0][0] == v_bins[j][0][0]:
+                        continue
+                    else:
+                        d[i][j] += np.sum(np.multiply(v_bins[i][2][k], v_bins[j][2][k]))
+            # print("Seg " + str(k))
+            # print(d)
+            # print("...\n")
+        print(v_bins[:, 0])
+        print(d)
+        print("---\n")
+        return d
+
     def validate_gp_wait(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
         n = self.d_set.row_count
@@ -269,9 +291,8 @@ class GradACO:
         else:
             return gen_pattern
 
-    def run_ant_colony_ano(self):
-        # self.s_matrix = np.ones(self.d_set.d_matrix.shape, dtype=float)
-        # print(self.s_matrix)
+    def run_ant_colony(self):
+        d = self.generate_d()
         min_supp = self.d_set.thd_supp
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
@@ -280,9 +301,6 @@ class GradACO:
         if self.d_set.no_bins:
             return []
         return winner_gps
-
-    def generate_random_segs(self):
-        s = self.s_matrix
 
     def aco_code_n(self):
         d = self.d_matrix
@@ -296,10 +314,10 @@ class GradACO:
             print(visibility)
 
     def aco_code(self):
-        d = self.d_matrix
+        d = self.generate_d()
         iteration = 100
         n_ants = 8
-        n_city = 3
+        n_city = 8
         m = n_ants
         n = n_city
         e = .5  # evaporation factor
@@ -388,7 +406,6 @@ class GradACO:
                                                                                                  i, j + 1]) - 1] + dt
                     # updating the pheromne with delta_distance
                     # delta_distance will be more with min_dist i.e adding more weight to that route  peromne
-
 
         print('route of all the ants at the end :')
         print(rute_opt)
