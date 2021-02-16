@@ -53,6 +53,16 @@ class GI:
     def to_string(self):
         return str(self.attribute_col) + self.symbol
 
+    @staticmethod
+    def parse_gi(gi_str):
+        txt = gi_str.split('_')
+        attr_col = int(txt[0])
+        if txt[1] == 'neg':
+            symbol = '-'
+        else:
+            symbol = '+'
+        return GI(attr_col, symbol)
+
 
 class GP:
 
