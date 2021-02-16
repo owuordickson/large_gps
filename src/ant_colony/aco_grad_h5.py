@@ -22,7 +22,7 @@ class GradACO:
 
     def __init__(self, f_path, min_supp, segs):
         self.d_set = Dataset(f_path, min_supp)
-        self.d_set.init_gp_attributes(segs)
+        #self.d_set.init_gp_attributes(segs)
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
@@ -217,7 +217,7 @@ class GradACO:
         # 1. Fetch
         grp = 'dataset/' + self.d_set.step_name + '/valid_bins/'  # + gi.as_string()
         h5f = h5py.File(self.d_set.h5_file, 'r')
-        print(h5f[grp])
+        print(h5f[grp]['0_neg']['segs'][:])
         # temp = self.d_set.read_h5_dataset(grp)
         # v_bins = self.d_set.valid_bins
 
