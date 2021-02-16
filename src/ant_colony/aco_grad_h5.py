@@ -21,7 +21,7 @@ from common.dataset import Dataset
 class GradACO:
 
     def __init__(self, f_path, min_supp, segs):
-        self.d_set = Dataset(f_path, min_supp)
+        self.d_set = Dataset(f_path, segs, min_supp)
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0

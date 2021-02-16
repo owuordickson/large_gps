@@ -26,7 +26,7 @@ import numpy as np
 
 class Dataset:
 
-    def __init__(self, file_path, min_sup=0):
+    def __init__(self, file_path, segs, min_sup=0.5):
         self.h5_file = str(Path(file_path).stem) + str('.h5')
         if os.path.exists(self.h5_file):
             print("Fetching data from h5 file")
@@ -59,7 +59,7 @@ class Dataset:
             self.seg_count = 0
             self.step_name = ''  # For T-GRAANK
             self.attr_size = 0  # For T-GRAANK
-            self.init_gp_attributes()
+            self.init_gp_attributes(segs)
             # self.valid_bins = np.array([])
             # self.init_attributes()
 
@@ -121,7 +121,7 @@ class Dataset:
                 # valid_bins.append(np.array([incr.tolist(), arr_pos[0], arr_pos[1]], dtype=object))
                 grp_name = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
                 grp = h5f.create_group(grp_name)
-                adict = dict(attr=incr.tolist(), segs=arr_pos[0])#, bin=arr_pos[1])
+                adict = dict(attr=incr.tolist(), segs=arr_pos[0], bin=arr_pos[1].astype(np.bool).dtype)
                 for k,v in adict.items():
                     grp.create_dataset(k, data=v)
                 seg_sums.append(arr_pos[0])
@@ -133,7 +133,7 @@ class Dataset:
                 grp_name = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
                 grp = h5f.create_group(grp_name)
                 # self.add_h5_dataset(grp, np.array([decr.tolist(), arr_neg[1]]))
-                adict = dict(attr=decr.tolist(), segs=arr_neg[0])  # , bin=arr_neg[1])
+                adict = dict(attr=decr.tolist(), segs=arr_neg[0], bin=arr_neg[1].astype(np.bool).dtype)
                 for k,v in adict.items():
                     grp.create_dataset(k, data=v)
                 seg_sums.append(arr_neg[0])
