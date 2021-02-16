@@ -62,7 +62,7 @@ def init_algorithm(f_path, min_supp, cores, seg_size=2):
         # wr_line += str(ac.p_matrix)
         # ac.plot_pheromone_matrix()
         return wr_line
-    except Exception as error:
+    except ArithmeticError as error:
         wr_line = "Failed: " + str(error)
         return wr_line
 

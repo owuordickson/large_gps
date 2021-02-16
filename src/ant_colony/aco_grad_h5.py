@@ -61,7 +61,7 @@ class GradACO:
             elif symbol == '-':
                 self.p_matrix[i][1] = (1 - self.e_factor) * self.p_matrix[i][1]
 
-    def run_ant_colony(self):
+    def run_ant_colony_ano(self):
         # self.s_matrix = np.ones(self.d_set.d_matrix.shape, dtype=float)
         # print(self.s_matrix)
         min_supp = self.d_set.thd_supp
@@ -76,7 +76,7 @@ class GradACO:
     def generate_random_segs(self):
         s = self.s_matrix
 
-    def run_ant_colony_old(self):
+    def run_ant_colony(self):
         min_supp = self.d_set.thd_supp
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
