@@ -22,7 +22,6 @@ class GradACO:
 
     def __init__(self, f_path, min_supp, segs):
         self.d_set = Dataset(f_path, min_supp)
-        #self.d_set.init_gp_attributes(segs)
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
@@ -215,24 +214,34 @@ class GradACO:
 
     def generate_d(self):
         # 1. Fetch
-        grp = 'dataset/' + self.d_set.step_name + '/valid_bins/'  # + gi.as_string()
+        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'  # + gi.as_string()
         h5f = h5py.File(self.d_set.h5_file, 'r')
-        print(h5f[grp]['0_neg']['segs'][:])
+        grp = h5f[grp_name]
+        keys = list(grp.keys())
+        print(keys)
+        print(GI.parse_gi(keys[0]).attribute_col)
+        print(grp['0_neg']['segs'][:])
         # temp = self.d_set.read_h5_dataset(grp)
         # v_bins = self.d_set.valid_bins
 
         # 2. Initialize an empty d-matrix
-        n = (self.d_set.attr_cols.size * 2) - self.d_set.invalid_bins.size  # v_bins.shape[0]
+        n = len(grp)  # v_bins.shape[0]
         d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
         for k in range(self.d_set.seg_count):
-            print(k)
+            # print(k)
             # 2. For each segment do a binary AND
-            # for i in range(n):
-             #   for j in range(n):
-             #       if v_bins[i][0][0] == v_bins[j][0][0]:
-             #           continue
-             #       else:
-             #           d[i][j] += np.sum(np.multiply(v_bins[i][2][k], v_bins[j][2][k]))
+            for i in range(n):
+                for j in range(n):
+                    bin_1 = grp[keys[i]]
+                    bin_2 = grp[keys[j]]
+                    if GI.parse_gi(keys[i]).attribute_col == GI.parse_gi(keys[j]).attribute_col:
+                        continue
+                    # if v_bins[i][0][0] == v_bins[j][0][0]:
+                    #    continue
+                    else:
+                        print(bin_1['segs'][:])
+                        # d[i][j] = np.sum(np.multiply(bin_1['bin'][k], bin_2['bin'][k], ))
+                        # d[i][j] += np.sum(np.multiply(v_bins[i][2][k], v_bins[j][2][k]))
         print(n)
         print(d)
         print("---\n")

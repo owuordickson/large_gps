@@ -59,6 +59,7 @@ class Dataset:
             self.seg_count = 0
             self.step_name = ''  # For T-GRAANK
             self.attr_size = 0  # For T-GRAANK
+            self.init_gp_attributes()
             # self.valid_bins = np.array([])
             # self.init_attributes()
 
