@@ -212,40 +212,6 @@ class GradACO:
         return False
 
     # ADDED TEST CODES
-
-    def generate_d(self):
-        # 1. Fetch valid bins group
-        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
-        h5f = h5py.File(self.d_set.h5_file, 'r')
-        grp = h5f[grp_name]
-        keys = list(grp.keys())
-
-        # 2. Initialize an empty d-matrix
-        n = len(grp)
-        d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
-        for k in range(self.d_set.seg_count):
-            # 2. For each segment do a binary AND
-            for i in range(n):
-                for j in range(n):
-                    bin_1 = grp[keys[i]]
-                    bin_2 = grp[keys[j]]
-                    if GI.parse_gi(keys[i]).attribute_col == GI.parse_gi(keys[j]).attribute_col:
-                        # Ignore similar attributes (+ or/and -)
-                        continue
-                    else:
-                        # Cumulative sum of all segments for 2x2 (all attributes) gradual items
-                        d[i][j] += np.sum(np.multiply(bin_1['bins'][str(k)][:], bin_2['bins'][str(k)][:], ))
-
-        # 3. Remove d[i][j] < min_supp
-        fr_count = ((self.d_set.thd_supp * self.d_set.attr_size * (self.d_set.attr_size - 1)) / 2)
-        d[d < fr_count] = 0
-
-        # 4. Save d_matrix in HDF5 file
-        h5f.close()
-        grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
-        self.d_set.add_h5_dataset(grp_name, d)
-        return d
-
     def validate_gp_wait(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
         n = self.d_set.row_count
@@ -305,6 +271,35 @@ class GradACO:
         else:
             return gen_pattern
 
+    def generate_d(self):
+        # 1. Fetch valid bins group
+        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
+        h5f = h5py.File(self.d_set.h5_file, 'r')
+        grp = h5f[grp_name]
+        keys = list(grp.keys())
+
+        # 2. Initialize an empty d-matrix
+        n = len(grp)
+        d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
+        for k in range(self.d_set.seg_count):
+            # 2. For each segment do a binary AND
+            for i in range(n):
+                for j in range(n):
+                    bin_1 = grp[keys[i]]
+                    bin_2 = grp[keys[j]]
+                    if GI.parse_gi(keys[i]).attribute_col == GI.parse_gi(keys[j]).attribute_col:
+                        # Ignore similar attributes (+ or/and -)
+                        continue
+                    else:
+                        # Cumulative sum of all segments for 2x2 (all attributes) gradual items
+                        d[i][j] += np.sum(np.multiply(bin_1['bins'][str(k)][:], bin_2['bins'][str(k)][:], ))
+
+        # 3. Save d_matrix in HDF5 file
+        h5f.close()
+        grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
+        self.d_set.add_h5_dataset(grp_name, d)
+        return d
+
     def run_ant_colony(self):
         min_supp = self.d_set.thd_supp
         winner_gps = list()  # subsets
@@ -322,28 +317,21 @@ class GradACO:
             d = self.generate_d()
         print(d)
 
-        # 2. Calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+        # 2. Remove d[i][j] < min_supp
+        n = self.d_set.attr_size
+        fr_count = ((min_supp * n * (n - 1)) / 2)
+        d[d < fr_count] = 0
+
+        # 3. Calculating the visibility of the next city visibility(i,j)=1/d(i,j)
         with np.errstate(divide='ignore'):
             visibility = 1/d
             visibility[visibility == np.inf] = 0
-            print(visibility)
 
         # Save pheromone matrix (p_matrix)
         self.iteration_count = it_count
         grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
         self.d_set.add_h5_dataset(grp, self.p_matrix)
         return winner_gps
-
-    def aco_code_n(self):
-        d = self.d_matrix
-        p = self.p_matrix
-        e = .5  # evaporation factor
-
-        with np.errstate(divide='ignore'):
-            # calculating the visibility of the next city visibility(i,j)=1/d(i,j)
-            visibility = 1/d
-            visibility[visibility == np.inf] = 0
-            print(visibility)
 
     def aco_code(self):
         d = self.generate_d()
