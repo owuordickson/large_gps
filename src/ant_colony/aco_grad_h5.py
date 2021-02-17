@@ -220,8 +220,8 @@ class GradACO:
         grp = h5f[grp_name]
         keys = list(grp.keys())
         print(keys)
-        print(GI.parse_gi(keys[0]).attribute_col)
-        print(grp['0_neg']['bins'])
+        # print(GI.parse_gi(keys[0]).attribute_col)
+        # print(grp['0_neg']['bins'][str(2)][:])
         # temp = self.d_set.read_h5_dataset(grp)
         # v_bins = self.d_set.valid_bins
 
@@ -236,14 +236,11 @@ class GradACO:
                     bin_1 = grp[keys[i]]
                     bin_2 = grp[keys[j]]
                     if GI.parse_gi(keys[i]).attribute_col == GI.parse_gi(keys[j]).attribute_col:
+                        # Ignore similar attributes (+ or/and -)
                         continue
-                    # if v_bins[i][0][0] == v_bins[j][0][0]:
-                    #    continue
                     else:
-                        print()
-                        # print(bin_1['segs'][:])
-                        # d[i][j] = np.sum(np.multiply(bin_1['bin'][k], bin_2['bin'][k], ))
-                        # d[i][j] += np.sum(np.multiply(v_bins[i][2][k], v_bins[j][2][k]))
+                        # Cumulative sum of all segments for 2x2 (all attributes) gradual items
+                        d[i][j] += np.sum(np.multiply(bin_1['bins'][str(k)][:], bin_2['bins'][str(k)][:], ))
         print(n)
         print(d)
         print("---\n")

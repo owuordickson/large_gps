@@ -128,10 +128,7 @@ class Dataset:
                 # bins_dict = dict(bins_zip)
                 grp = h5f.create_group(grp_name + '/bins')
                 for k, v in bins_zip:
-                    print(k)
-                    print(v)
-                    print("---")
-                    grp.create_dataset(k, data=v)
+                    grp.create_dataset(str(k), data=v)
                 seg_sums.append(arr_pos[0])
                 valid_count += 1
             if arr_neg is None:
@@ -148,7 +145,7 @@ class Dataset:
                 # bins_dict = dict(bins_zip)
                 grp = h5f.create_group(grp_name + '/bins')
                 for k, v in bins_zip:
-                    grp.create_dataset(k, data=v)
+                    grp.create_dataset(str(k), data=v)
                 seg_sums.append(arr_neg[0])
                 valid_count += 1
 
