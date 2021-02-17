@@ -121,6 +121,14 @@ class GP:
                 return True
         return False
 
+    def contains_attr(self, gi):
+        if gi is None:
+            return False
+        for gi_obj in self.gradual_items:
+            if gi.attribute_col == gi_obj.attribute_col:
+                return True
+        return False
+
     def to_string(self):
         pattern = list()
         for item in self.gradual_items:
