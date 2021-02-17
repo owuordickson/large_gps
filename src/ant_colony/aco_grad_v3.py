@@ -3,18 +3,19 @@
 @author: "Dickson Owuor"
 @credits: "Thomas Runkler, Edmond Menya, and Anne Laurent,"
 @license: "MIT"
-@version: "4.0"
+@version: "3.0"
 @email: "owuordickson@gmail.com"
 @created: "12 July 2019"
-@modified: "17 Feb 2021"
+@modified: "16 June 2020"
 
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
+
 import numpy as np
-from itertools import combinations
-from common.gp import GI, GP
-from common.dataset_bfs_new import Dataset
+from numpy import random as rand
+from common.gp_v4 import GI, GP
+from common.dataset_bfs_v3 import Dataset
 
 
 class GradACO:
@@ -25,60 +26,49 @@ class GradACO:
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
-        self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
+        self.p_matrix = np.ones((self.d_set.column_size, 3), dtype=float)
 
-    def generate_d(self):
-        v_bins = self.d_set.valid_bins
-        # 1. Fetch valid bins group
-        attr_keys = [GI(x[0], x[1].decode()) for x in v_bins[:, 0]]
+    def deposit_pheromone(self, pattern):
+        lst_attr = []
+        for obj in pattern.gradual_items:
+            # print(obj.attribute_col)
+            attr = obj.attribute_col
+            symbol = obj.symbol
+            lst_attr.append(attr)
+            i = attr
+            if symbol == '+':
+                self.p_matrix[i][0] += 1
+            elif symbol == '-':
+                self.p_matrix[i][1] += 1
+        for index in self.attr_index:
+            if int(index) not in lst_attr:
+                i = int(index)
+                self.p_matrix[i][2] += 1
 
-        # 2. Initialize an empty d-matrix
-        n = len(attr_keys)
-        d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
-        for i in range(n):
-            for j in range(n):
-                if attr_keys[i].attribute_col == attr_keys[j].attribute_col:
-                    # Ignore similar attributes (+ or/and -)
-                    continue
-                else:
-                    bin_1 = v_bins[i][1]
-                    bin_2 = v_bins[j][1]
-                    # Cumulative sum of all segments for 2x2 (all attributes) gradual items
-                    d[i][j] += np.sum(np.multiply(bin_1, bin_2))
-        return d, attr_keys
+    def evaporate_pheromone(self, pattern):
+        lst_attr = []
+        for obj in pattern.gradual_items:
+            # print(obj.attribute_col)
+            attr = obj.attribute_col
+            symbol = obj.symbol
+            lst_attr.append(attr)
+            i = attr
+            if symbol == '+':
+                self.p_matrix[i][0] = (1 - self.e_factor) * self.p_matrix[i][0]
+            elif symbol == '-':
+                self.p_matrix[i][1] = (1 - self.e_factor) * self.p_matrix[i][1]
 
     def run_ant_colony(self):
         min_supp = self.d_set.thd_supp
-        d = self.d
-        a = self.d_set.attr_size
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
         repeated = 0
         it_count = 0
-
         if self.d_set.no_bins:
             return []
-
-        # 1. Remove d[i][j] < frequency-count of min_supp
-        fr_count = ((min_supp * a * (a - 1)) / 2)
-        d[d < fr_count] = 0
-
-        # 2. Calculating the visibility of the next city
-        # visibility(i,j)=1/d(i,j)
-        # In the case GP mining visibility = d
-        # with np.errstate(divide='ignore'):
-        #    visibility = 1/d
-        #    visibility[visibility == np.inf] = 0
-
-        # 3. Initialize pheromones (p_matrix)
-        pheromones = np.ones(d.shape, dtype=float)
-        # print(pheromones)
-        # print("***\n")
-
-        # 4. Iterations for ACO
         # while repeated < 1:
         while it_count < 10:
-            rand_gp, pheromones = self.generate_aco_gp(pheromones)
+            rand_gp = self.generate_random_gp()
             if len(rand_gp.gradual_items) > 1:
                 # print(rand_gp.get_pattern())
                 exits = GradACO.is_duplicate(rand_gp, winner_gps, loser_gps)
@@ -96,55 +86,39 @@ class GradACO:
                         repeated += 1
                     else:
                         if gen_gp.support >= min_supp:
-                            pheromones = self.update_pheromones(gen_gp, pheromones)
+                            self.deposit_pheromone(gen_gp)
                             winner_gps.append(gen_gp)
                         else:
                             loser_gps.append(gen_gp)
+                            # update pheromone as irrelevant with loss_sols
+                            self.evaporate_pheromone(gen_gp)
                     if set(gen_gp.get_pattern()) != set(rand_gp.get_pattern()):
                         loser_gps.append(rand_gp)
                 else:
                     repeated += 1
             it_count += 1
-
         self.iteration_count = it_count
         return winner_gps
 
-    def generate_aco_gp(self, p_matrix):
-        attr_keys = self.attr_keys
-        v_matrix = self.d
+    def generate_random_gp(self):
+        p = self.p_matrix
+        n = len(self.attr_index)
         pattern = GP()
-
-        # 1. Generate gradual items with highest pheromone and visibility
-        m = p_matrix.shape[0]
-        for i in range(m):
-            combine_feature = np.multiply(v_matrix[i], p_matrix[i])
-            total = np.sum(combine_feature)
-            with np.errstate(divide='ignore', invalid='ignore'):
-                probability = combine_feature / total
-            cum_prob = np.cumsum(probability)
-            r = np.random.random_sample()
-            try:
-                j = np.nonzero(cum_prob > r)[0][0]
-                gi = attr_keys[j]
-                if not pattern.contains_attr(gi):
-                    pattern.add_gradual_item(gi)
-            except IndexError:
+        attrs = np.random.permutation(n)
+        for i in attrs:
+            max_extreme = n * 100
+            x = float(rand.randint(1, max_extreme) / max_extreme)
+            pos = float(p[i][0] / (p[i][0] + p[i][1] + p[i][2]))
+            neg = float((p[i][0] + p[i][1]) / (p[i][0] + p[i][1] + p[i][2]))
+            if x < pos:
+                temp = GI(self.attr_index[i], '+')
+            elif (x >= pos) and (x < neg):
+                temp = GI(self.attr_index[i], '-')
+            else:
+                # temp = GI(self.attr_index[i], 'x')
                 continue
-
-        # 2. Evaporate pheromones by factor e
-        p_matrix = (1 - self.e_factor) * p_matrix
-        return pattern, p_matrix
-
-    def update_pheromones(self, pattern, p_matrix):
-        v_matrix = self.d
-        idx = [self.attr_keys.index(x) for x in pattern.gradual_items]
-        combs = list(combinations(idx, 2))
-        for i, j in combs:
-            if v_matrix[i][j] > 0:
-                p_matrix[i][j] += 1
-            if v_matrix[j][i] > 0:
-                p_matrix[j][i] += 1
-        return p_matrix
+            pattern.add_gradual_item(temp)
+        return pattern
 
     def validate_gp(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]

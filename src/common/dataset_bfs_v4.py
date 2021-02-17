@@ -46,12 +46,10 @@ class Dataset:
         return attr_cols
 
     def get_time_cols(self):
+        # Retrieve first column only
         time_cols = list()
-        # for k in range(10, len(self.data[0])):
-        #    time_cols.append(k)
-        # time_cols.append(0)
-        n = len(self.data[0])
-        for i in range(n):  # check every column for time format
+        n = self.col_count
+        for i in range(n):  # check every column/attribute for time format
             row_data = str(self.data[0][i])
             try:
                 time_ok, t_stamp = Dataset.test_time(row_data)
@@ -59,10 +57,7 @@ class Dataset:
                     time_cols.append(i)
             except ValueError:
                 continue
-        if len(time_cols) > 0:
-            return np.array(time_cols)
-        else:
-            return np.array([])
+        return np.array(time_cols)
 
     def init_gp_attributes(self, attr_data=None):
         # (check) implement parallel multiprocessing
@@ -157,14 +152,3 @@ class Dataset:
                     return True, t_stamp
                 except ValueError:
                     raise ValueError('no valid date-time format found')
-
-    @staticmethod
-    def get_timestamp(time_data):
-        try:
-            ok, stamp = Dataset.test_time(time_data)
-            if ok:
-                return stamp
-            else:
-                return False
-        except ValueError:
-            return False
