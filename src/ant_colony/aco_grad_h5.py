@@ -219,7 +219,6 @@ class GradACO:
                 pattern.add_gradual_item(gi)
                 pattern.set_support(supp)
         # print(str(pattern.to_string()) + ' : ' + str(pattern.support))
-        # h5f_1.close()
         return pattern
 
     @staticmethod
