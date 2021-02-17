@@ -25,44 +25,13 @@ class GradACO:
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
-        grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
-        p_matrix = self.d_set.read_h5_dataset(grp)
-        if np.sum(p_matrix) > 0:
-            self.p_matrix = p_matrix
-        else:
-            self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
-        # self.p_matrix = np.ones((self.d_set.col_count, 3), dtype=float)
-        # self.aco_code()
-
-    def update_pheromone(self, pattern):
-        lst_attr = []
-        for obj in pattern.gradual_items:
-            # print(obj.attribute_col)
-            attr = obj.attribute_col
-            symbol = obj.symbol
-            lst_attr.append(attr)
-            i = attr
-            if symbol == '+':
-                self.p_matrix[i][0] += 1
-            elif symbol == '-':
-                self.p_matrix[i][1] += 1
-        for index in self.attr_index:
-            if int(index) not in lst_attr:
-                i = int(index)
-                self.p_matrix[i][2] += 1
-
-    def evaporate_pheromone(self, pattern):
-        lst_attr = []
-        for obj in pattern.gradual_items:
-            # print(obj.attribute_col)
-            attr = obj.attribute_col
-            symbol = obj.symbol
-            lst_attr.append(attr)
-            i = attr
-            if symbol == '+':
-                self.p_matrix[i][0] = (1 - self.e_factor) * self.p_matrix[i][0]
-            elif symbol == '-':
-                self.p_matrix[i][1] = (1 - self.e_factor) * self.p_matrix[i][1]
+        # 1. Retrieve/Generate distance matrix (d)
+        self.d = self.generate_d()
+        # 2. Fetch attributes corresponding to v_matrix and p_matrix
+        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
+        h5f = h5py.File(self.d_set.h5_file, 'r')
+        self.attr_keys = list(h5f[grp_name].keys())
+        h5f.close()
 
     def run_ant_colony_old(self):
         min_supp = self.d_set.thd_supp
@@ -107,26 +76,6 @@ class GradACO:
         grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
         self.d_set.add_h5_dataset(grp, self.p_matrix)
         return winner_gps
-
-    def generate_random_gp(self):
-        p = self.p_matrix
-        n = len(self.attr_index)
-        pattern = GP()
-        attrs = np.random.permutation(n)
-        for i in attrs:
-            max_extreme = n * 100
-            x = float(np.random.randint(1, max_extreme) / max_extreme)
-            pos = float(p[i][0] / (p[i][0] + p[i][1] + p[i][2]))
-            neg = float((p[i][0] + p[i][1]) / (p[i][0] + p[i][1] + p[i][2]))
-            if x < pos:
-                temp = GI(self.attr_index[i], '+')
-            elif (x >= pos) and (x < neg):
-                temp = GI(self.attr_index[i], '-')
-            else:
-                # temp = GI(self.attr_index[i], 'x')
-                continue
-            pattern.add_gradual_item(temp)
-        return pattern
 
     def validate_gp(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
@@ -272,7 +221,13 @@ class GradACO:
             return gen_pattern
 
     def generate_d(self):
-        # 1. Fetch valid bins group
+        # 1a. Retrieve/Generate distance matrix (d)
+        grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
+        d = self.d_set.read_h5_dataset(grp_name)
+        if d.size > 0:
+            return d
+
+        # 1b. Fetch valid bins group
         grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
         h5f = h5py.File(self.d_set.h5_file, 'r')
         grp = h5f[grp_name]
@@ -302,6 +257,8 @@ class GradACO:
 
     def run_ant_colony(self):
         min_supp = self.d_set.thd_supp
+        d = self.d
+        a = self.d_set.attr_size
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
         repeated = 0
@@ -310,51 +267,62 @@ class GradACO:
         if self.d_set.no_bins:
             return []
 
-        # 1. Retrieve/Generate distance matrix (d)
-        grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
-        d = self.d_set.read_h5_dataset(grp_name)
-        if d.size <= 0:
-            d = self.generate_d()
-
-        # 2. Remove d[i][j] < frequency-count of min_supp
-        a = self.d_set.attr_size
+        # 1. Remove d[i][j] < frequency-count of min_supp
         fr_count = ((min_supp * a * (a - 1)) / 2)
         d[d < fr_count] = 0
         print(d)
 
-        # 3. Calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+        # 2. Calculating the visibility of the next city
+        # visibility(i,j)=1/d(i,j)
+        # In the case GP mining visibility = d
         # with np.errstate(divide='ignore'):
         #    visibility = 1/d
         #    visibility[visibility == np.inf] = 0
 
-        # 4. Initialize pheromones (p_matrix)
-        # grp_name = 'dataset/' + self.d_set.step_name + '/p_matrix'
-        # pheromones = self.d_set.read_h5_dataset(grp_name)
-        # if pheromones.size <= 0:
+        # 3. Initialize pheromones (p_matrix)
         pheromones = np.ones(d.shape, dtype=float)
         print(pheromones)
         print("***\n")
 
-        # 5. Iterations for ACO
-        # 1. Fetch attributes corresponding to v_matrix and p_matrix
-        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
-        h5f = h5py.File(self.d_set.h5_file, 'r')
-        attr_keys = list(h5f[grp_name].keys())
-        h5f.close()
+        # 4. Iterations for ACO
         # while repeated < 1:
         while it_count <= 5:
-            rand_gp, pheromones = self.generate_aco_gp(attr_keys, d, pheromones)
+            rand_gp, pheromones = self.generate_aco_gp(pheromones)
+            if len(rand_gp.gradual_items) > 1:
+                # print(rand_gp.get_pattern())
+                exits = GradACO.is_duplicate(rand_gp, winner_gps, loser_gps)
+                if not exits:
+                    repeated = 0
+                    # check for anti-monotony
+                    is_super = GradACO.check_anti_monotony(loser_gps, rand_gp, subset=False)
+                    is_sub = GradACO.check_anti_monotony(winner_gps, rand_gp, subset=True)
+                    if is_super or is_sub:
+                        continue
+                    gen_gp = self.validate_gp(rand_gp)
+                    is_present = GradACO.is_duplicate(gen_gp, winner_gps, loser_gps)
+                    is_sub = GradACO.check_anti_monotony(winner_gps, gen_gp, subset=True)
+                    if is_present or is_sub:
+                        repeated += 1
+                    else:
+                        if gen_gp.support >= min_supp:
+                            pheromones = self.update_pheromones(gen_gp, pheromones)
+                            winner_gps.append(gen_gp)
+                        else:
+                            loser_gps.append(gen_gp)
+                    if set(gen_gp.get_pattern()) != set(rand_gp.get_pattern()):
+                        loser_gps.append(rand_gp)
+                else:
+                    repeated += 1
             it_count += 1
 
-        # Save pheromone matrix (p_matrix)
         self.iteration_count = it_count
-        # grp_name = 'dataset/' + self.d_set.step_name + '/p_matrix'
-        # self.d_set.add_h5_dataset(grp_name, pheromones)
         # print(pheromones)
         # print("***\n")
         return winner_gps
 
-    def generate_aco_gp(self, attr_keys, v_matrix, p_matrix):
+    def generate_aco_gp(self, p_matrix):
+        attr_keys = self.attr_keys
+        v_matrix = self.d
         pattern = GP()
 
         # 1. Generate gradual items with highest pheromone and visibility
@@ -377,13 +345,11 @@ class GradACO:
 
         # 2. Evaporate pheromones by factor e
         p_matrix = (1 - self.e_factor) * p_matrix
-
-        GradACO.update_pheromones(attr_keys, pattern, p_matrix, v_matrix)  # TO BE REMOVED
         return pattern, p_matrix
 
-    @staticmethod
-    def update_pheromones(attr_keys, pattern, v_matrix, p_matrix):
-        idx = [attr_keys.index(x.as_string()) for x in pattern.gradual_items]
+    def update_pheromones(self, pattern, p_matrix):
+        v_matrix  = self.d
+        idx = [self.attr_keys.index(x.as_string()) for x in pattern.gradual_items]
         combs = list(combinations(idx, 2))
         print(idx)
         print(combs)
