@@ -3,7 +3,7 @@
 @author: "Dickson Owuor"
 @credits: "Thomas Runkler, Edmond Menya, and Anne Laurent,"
 @license: "MIT"
-@version: "4.0"
+@version: "5.4"
 @email: "owuordickson@gmail.com"
 @created: "12 July 2019"
 @modified: "17 Feb 2021"
@@ -135,14 +135,11 @@ class GradACO:
         return pattern, p_matrix
 
     def update_pheromones(self, pattern, p_matrix):
-        v_matrix = self.d
         idx = [self.attr_keys.index(x) for x in pattern.gradual_items]
         combs = list(combinations(idx, 2))
         for i, j in combs:
-            if v_matrix[i][j] > 0:
-                p_matrix[i][j] += 1
-            if v_matrix[j][i] > 0:
-                p_matrix[j][i] += 1
+            p_matrix[i][j] += 1
+            p_matrix[j][i] += 1
         return p_matrix
 
     def validate_gp(self, pattern):
