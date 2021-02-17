@@ -276,7 +276,7 @@ class GradACO:
         grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
         h5f = h5py.File(self.d_set.h5_file, 'r')
         grp = h5f[grp_name]
-        keys = list(grp.keys())
+        attr_keys = list(grp.keys())
 
         # 2. Initialize an empty d-matrix
         n = len(grp)
@@ -285,9 +285,9 @@ class GradACO:
             # 2. For each segment do a binary AND
             for i in range(n):
                 for j in range(n):
-                    bin_1 = grp[keys[i]]
-                    bin_2 = grp[keys[j]]
-                    if GI.parse_gi(keys[i]).attribute_col == GI.parse_gi(keys[j]).attribute_col:
+                    bin_1 = grp[attr_keys[i]]
+                    bin_2 = grp[attr_keys[j]]
+                    if GI.parse_gi(attr_keys[i]).attribute_col == GI.parse_gi(attr_keys[j]).attribute_col:
                         # Ignore similar attributes (+ or/and -)
                         continue
                     else:
@@ -315,23 +315,54 @@ class GradACO:
         d = self.d_set.read_h5_dataset(grp_name)
         if d.size <= 0:
             d = self.generate_d()
-        print(d)
 
-        # 2. Remove d[i][j] < min_supp
-        n = self.d_set.attr_size
-        fr_count = ((min_supp * n * (n - 1)) / 2)
+        # 2. Remove d[i][j] < frequency-count of min_supp
+        a = self.d_set.attr_size
+        fr_count = ((min_supp * a * (a - 1)) / 2)
         d[d < fr_count] = 0
+        print(d)
 
         # 3. Calculating the visibility of the next city visibility(i,j)=1/d(i,j)
         with np.errstate(divide='ignore'):
             visibility = 1/d
             visibility[visibility == np.inf] = 0
 
+        # 4. Initialize pheromones (p_matrix)
+        grp_name = 'dataset/' + self.d_set.step_name + '/p_matrix'
+        pheromones = self.d_set.read_h5_dataset(grp_name)
+        if pheromones.size <= 0:
+            pheromones = np.ones(d.shape, dtype=float)
+        print(pheromones)
+
+        # 5. Iterations for ACO
+        # while repeated < 1:
+        while it_count <= 10:
+            rand_gp = self.generate_gp(visibility, pheromones)
+            it_count += 1
+
+        # TO BE MOVED TO UPDATE-METHOD
         # Save pheromone matrix (p_matrix)
         self.iteration_count = it_count
-        grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
-        self.d_set.add_h5_dataset(grp, self.p_matrix)
+        grp_name = 'dataset/' + self.d_set.step_name + '/p_matrix'
+        self.d_set.add_h5_dataset(grp_name, pheromones)
         return winner_gps
+
+    def generate_gp(self, v_matrix, p_matrix):
+        pattern = GP()
+
+        # 1. Fetch attributes corresponding to v_matrix and p_matrix
+        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
+        h5f = h5py.File(self.d_set.h5_file, 'r')
+        attr_keys = list(h5f[grp_name].keys())
+        h5f.close()
+
+        # 2.
+        m, n = p_matrix.shape
+        for i in range(m):
+            for j in range(n):
+                continue
+
+        return pattern
 
     def aco_code(self):
         d = self.generate_d()
