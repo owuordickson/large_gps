@@ -144,14 +144,11 @@ class Dataset:
             h5f.close()
             self.data = None
 
-    def read_h5_dataset(self, group, seg=None):
+    def read_h5_dataset(self, group):
         temp = np.array([])
         h5f = h5py.File(self.h5_file, 'r')
         if group in h5f:
-            if seg is None:
-                temp = h5f[group][:]
-            else:
-                temp = h5f[group][seg]
+            temp = h5f[group][:]
         h5f.close()
         return temp
 
