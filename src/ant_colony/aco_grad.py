@@ -67,7 +67,7 @@ class GradACO:
         if self.d_set.no_bins:
             return []
         # while repeated < 1:
-        while it_count <= 10:
+        while it_count < 10:
             rand_gp = self.generate_random_gp()
             if len(rand_gp.gradual_items) > 1:
                 # print(rand_gp.get_pattern())

@@ -13,7 +13,6 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 import h5py
 import numpy as np
 from itertools import combinations
-# import pandas as pd
 from common.gp import GI, GP
 from common.dataset import Dataset
 
@@ -26,25 +25,6 @@ class GradACO:
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
         self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
-
-    def bin_and(self, bins):
-        n = self.d_set.row_count
-        bin_1 = bins[0]
-        bin_2 = bins[1]
-        temp_bin = []
-        bin_sum = 0
-        for i in range(len(bin_1)):
-            prod = bin_1[i] * bin_2[i]
-            temp_bin.append(prod)
-            bin_sum += np.sum(prod)
-            # print(str(bin_1[i]) + ' x ' + str(bin_2[i]) + '\n')
-            # print(temp_bin)
-            # print("***")
-        temp_bin = np.array(temp_bin, dtype=object)
-        # print(temp_bin)
-        # print(np.sum(temp_bin))
-        supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-        return temp_bin, supp
 
     @staticmethod
     def check_anti_monotony(lst_p, pattern, subset=True):
@@ -169,7 +149,7 @@ class GradACO:
                         continue
                     else:
                         # Cumulative sum of all segments for 2x2 (all attributes) gradual items
-                        d[i][j] += np.sum(np.multiply(bin_1['bins'][str(k)][:], bin_2['bins'][str(k)][:], ))
+                        d[i][j] += np.sum(np.multiply(bin_1['bins'][str(k)][:], bin_2['bins'][str(k)][:]))
 
         # 3. Save d_matrix in HDF5 file
         h5f.close()
@@ -192,7 +172,6 @@ class GradACO:
         # 1. Remove d[i][j] < frequency-count of min_supp
         fr_count = ((min_supp * a * (a - 1)) / 2)
         d[d < fr_count] = 0
-        print(d)
 
         # 2. Calculating the visibility of the next city
         # visibility(i,j)=1/d(i,j)
@@ -203,12 +182,12 @@ class GradACO:
 
         # 3. Initialize pheromones (p_matrix)
         pheromones = np.ones(d.shape, dtype=float)
-        print(pheromones)
-        print("***\n")
+        # print(pheromones)
+        # print("***\n")
 
         # 4. Iterations for ACO
         # while repeated < 1:
-        while it_count <= 5:
+        while it_count < 10:
             rand_gp, pheromones = self.generate_aco_gp(pheromones)
             if len(rand_gp.gradual_items) > 1:
                 # print(rand_gp.get_pattern())
@@ -263,7 +242,6 @@ class GradACO:
                     pattern.add_gradual_item(gi)
             except IndexError:
                 continue
-        print("Generated pattern: " + str(pattern.to_string()))
 
         # 2. Evaporate pheromones by factor e
         p_matrix = (1 - self.e_factor) * p_matrix
@@ -273,22 +251,61 @@ class GradACO:
         v_matrix = self.d
         idx = [self.attr_keys.index(x.as_string()) for x in pattern.gradual_items]
         combs = list(combinations(idx, 2))
-        print(idx)
-        print(combs)
         for i, j in combs:
             if v_matrix[i][j] > 0:
                 p_matrix[i][j] += 1
             if v_matrix[j][i] > 0:
                 p_matrix[j][i] += 1
-        print(p_matrix)
         return p_matrix
 
     def validate_gp(self, pattern):
-        # return GP()
         # pattern = [('2', '+'), ('4', '+')]
-        # n = self.d_set.row_count
+        gen_pattern = GP()
+
+        h5f = h5py.File(self.d_set.h5_file, 'r')
+        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
+        bin_keys = [gi.as_string() for gi in pattern.gradual_items]
+        bin_grps = [h5f[grp_name + k] for k in bin_keys]
+
+        if len(bin_grps) >= 2:
+            gen_pattern = self.bin_and(bin_keys, bin_grps)
+
+        if len(gen_pattern.gradual_items) <= 1:
+            return pattern
+        else:
+            return gen_pattern
+
+    def bin_and(self, keys, grps):
+        n = self.d_set.attr_size
         min_supp = self.d_set.thd_supp
-        # seg_count = 0
+        pattern = GP()
+
+        gi = GI.parse_gi(keys[0])
+        pattern.add_gradual_item(gi)
+        bin_1 = grps[0]['bins']
+        main_bin = [bin_1[str(x)][:] for x in range(self.d_set.seg_count)]
+        for i in range(len(keys)):
+            if i == 0:
+                continue
+            bin_2 = grps[i]['bins']
+            # temp_bin = [np.multiply(temp_bin[k], bin_2[str(k)][:]) for k in range(self.d_set.seg_count)]
+            temp_bin = []
+            bin_sum = 0
+            for k in range(self.d_set.seg_count):
+                arr = np.multiply(main_bin[k], bin_2[str(k)][:])
+                bin_sum += np.sum(arr)
+                temp_bin.append(arr)
+            supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+            if supp >= min_supp:
+                main_bin = temp_bin
+                gi = GI.parse_gi(keys[i])
+                pattern.add_gradual_item(gi)
+                pattern.set_support(supp)
+        # print(str(pattern.to_string()) + ' : ' + str(pattern.support))
+        return pattern
+
+    def validate_old(self, pattern):
+        min_supp = self.d_set.thd_supp
         gen_pattern = GP()
         arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
         if len(arg) >= 2:
@@ -317,3 +334,21 @@ class GradACO:
         else:
             return gen_pattern
 
+    def bin_and_old(self, bins):
+        n = self.d_set.row_count
+        bin_1 = bins[0]
+        bin_2 = bins[1]
+        temp_bin = []
+        bin_sum = 0
+        for i in range(len(bin_1)):
+            prod = bin_1[i] * bin_2[i]
+            temp_bin.append(prod)
+            bin_sum += np.sum(prod)
+            # print(str(bin_1[i]) + ' x ' + str(bin_2[i]) + '\n')
+            # print(temp_bin)
+            # print("***")
+        temp_bin = np.array(temp_bin, dtype=object)
+        # print(temp_bin)
+        # print(np.sum(temp_bin))
+        supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+        return temp_bin, supp
