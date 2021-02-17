@@ -3,14 +3,14 @@
 @author: "Dickson Owuor"
 @credits: "Anne Laurent,"
 @license: "MIT"
-@version: "2.0"
+@version: "3.0"
 @email: "owuordickson@gmail.com"
 @created: "05 February 2021"
 
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 Usage:
-    $python init_acograd_h5v2.py -f ../data/DATASET.csv -s 0.5
+    $python init_acograd_h5v3.py -f ../data/DATASET.csv -s 0.5
 
 Description:
     f -> file path (CSV)
@@ -22,7 +22,7 @@ Description:
 import sys
 from optparse import OptionParser
 # from common.profile_mem import Profile
-from ant_colony.aco_grad_h5v2 import GradACO
+from ant_colony.aco_grad_h5v3 import GradACO
 
 
 def init_algorithm(f_path, min_supp, cores, seg_size=10):
@@ -35,13 +35,12 @@ def init_algorithm(f_path, min_supp, cores, seg_size=10):
         ac = GradACO(f_path, min_supp, seg_size)
         list_gp = ac.run_ant_colony()
 
-        wr_line = "Algorithm: ACO-GRAANK HF5\n"
+        wr_line = "Algorithm: ACO-GRAANK HF5 (v3.0)\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
         wr_line += "No. of (dataset) tuples: " + str(ac.d_set.row_count) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "Segment size: " + str(seg_size) + '\n'
         wr_line += "Total number of segments: " + str(ac.d_set.seg_count) + '\n'
-        # wr_line += "Number of used segments: " + str(ac.used_segs) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
         wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
         wr_line += "Number of iterations: " + str(ac.iteration_count) + '\n\n'
@@ -108,7 +107,7 @@ if __name__ == "__main__":
         (options, args) = optparser.parse_args()
 
         if options.file is None:
-            print("Usage: $python init_acograd_h5v2.py -f filename.csv ")
+            print("Usage: $python init_acograd_h5v3.py -f filename.csv ")
             sys.exit('System will exit')
         else:
             filePath = options.file
