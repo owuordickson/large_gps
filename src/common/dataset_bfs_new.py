@@ -82,7 +82,17 @@ class Dataset:
             col_data = np.array(attr_data[col], dtype=float)
             incr = np.array((col, '+'), dtype='i, S1')
             decr = np.array((col, '-'), dtype='i, S1')
-            temp_pos = Dataset.bin_rank(col_data, equal=self.equal)
+            # temp_pos = Dataset.bin_rank(col_data, equal=self.equal)
+
+            # 2a. Generate 1-itemset gradual items
+            with np.errstate(invalid='ignore'):
+                if not self.equal:
+                    temp_pos = col_data < col_data[:, np.newaxis]
+                else:
+                    temp_pos = col_data <= col_data[:, np.newaxis]
+                    np.fill_diagonal(temp_pos, 0)
+
+            # 2b. Check support of each generated itemset
             supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
             if supp < self.thd_supp:
                 invalid_bins.append(incr)
@@ -95,16 +105,6 @@ class Dataset:
         if len(self.valid_bins) < 3:
             self.no_bins = True
         gc.collect()
-
-    @staticmethod
-    def bin_rank(arr, equal=False):
-        with np.errstate(invalid='ignore'):
-            if not equal:
-                temp_pos = arr < arr[:, np.newaxis]
-            else:
-                temp_pos = arr <= arr[:, np.newaxis]
-                np.fill_diagonal(temp_pos, 0)
-            return temp_pos
 
     @staticmethod
     def read_csv(file):
