@@ -322,6 +322,12 @@ class GradACO:
             d = self.generate_d()
         print(d)
 
+        # 2. Calculating the visibility of the next city visibility(i,j)=1/d(i,j)
+        with np.errstate(divide='ignore'):
+            visibility = 1/d
+            visibility[visibility == np.inf] = 0
+            print(visibility)
+
         # Save pheromone matrix (p_matrix)
         self.iteration_count = it_count
         grp = 'dataset/' + self.d_set.step_name + '/p_matrix'

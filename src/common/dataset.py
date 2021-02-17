@@ -34,7 +34,7 @@ class Dataset:
             self.titles = h5f['dataset/titles'][:]
             self.time_cols = h5f['dataset/time_cols'][:]
             self.attr_cols = h5f['dataset/attr_cols'][:]
-            self.data = h5f['dataset/data'][:]  # TO BE REMOVED
+            # self.data = h5f['dataset/data'][:]  # TO BE REMOVED
             size = h5f['dataset/size'][:]
             self.col_count = size[0]
             self.row_count = size[1]
@@ -45,7 +45,11 @@ class Dataset:
             self.seg_count = self.seg_sums[0].size
             h5f.close()
             self.thd_supp = min_sup
-            self.no_bins = True  # self.d_set.attr_cols.size - self.d_set.invalid_bins.size
+            n = (self.attr_cols.size * 2) - self.invalid_bins.size
+            if n > 0:
+                self.no_bins = False
+            else:
+                self.invalid_bins = True
             # self.data = None
         else:
             self.thd_supp = min_sup
