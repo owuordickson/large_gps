@@ -382,15 +382,15 @@ class GradACO:
         return pattern, p_matrix
 
     @staticmethod
-    def update_pheromones(attr_keys, pattern, p_matrix, v):
+    def update_pheromones(attr_keys, pattern, v_matrix, p_matrix):
         idx = [attr_keys.index(x.as_string()) for x in pattern.gradual_items]
         combs = list(combinations(idx, 2))
         print(idx)
         print(combs)
         for i, j in combs:
-            if v[i][j] > 0:
+            if v_matrix[i][j] > 0:
                 p_matrix[i][j] += 1
-            if v[j][i] > 0:
+            if v_matrix[j][i] > 0:
                 p_matrix[j][i] += 1
         print(p_matrix)
         return p_matrix
