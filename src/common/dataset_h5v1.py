@@ -3,7 +3,7 @@
 @author: "Dickson Owuor"
 @credits: "Anne Laurent"
 @license: "MIT"
-@version: "3.0"
+@version: "5.1"
 @email: "owuordickson@gmail.com"
 @created: "12 July 2019"
 @modified: "20 June 2020"

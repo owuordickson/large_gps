@@ -3,7 +3,7 @@
 @author: "Dickson Owuor"
 @credits: "Anne Laurent"
 @license: "MIT"
-@version: "3.2"
+@version: "5.2"
 @email: "owuordickson@gmail.com"
 @created: "05 February 2021"
 
@@ -286,14 +286,3 @@ class Dataset:
                     return True, t_stamp
                 except ValueError:
                     raise ValueError('no valid date-time format found')
-
-    @staticmethod
-    def get_timestamp(time_data):
-        try:
-            ok, stamp = Dataset.test_time(time_data)
-            if ok:
-                return stamp
-            else:
-                return False
-        except ValueError:
-            return False
