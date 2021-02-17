@@ -25,46 +25,7 @@ class GradACO:
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
-        # 1. Retrieve/Generate distance matrix (d)
-        self.d = self.generate_d()
-        # 2. Fetch attributes corresponding to v_matrix and p_matrix
-        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
-        h5f = h5py.File(self.d_set.h5_file, 'r')
-        self.attr_keys = list(h5f[grp_name].keys())
-        h5f.close()
-
-    def validate_gp(self, pattern):
-        # pattern = [('2', '+'), ('4', '+')]
-        # n = self.d_set.row_count
-        min_supp = self.d_set.thd_supp
-        # seg_count = 0
-        gen_pattern = GP()
-        arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
-        if len(arg) >= 2:
-            bin_data = self.d_set.valid_bins[arg.flatten()]
-            segments = np.stack(bin_data[:, 1])
-            large_col_sum = segments.sum(axis=0)
-            large_rows = np.argsort(-segments[:, large_col_sum.argmax()])
-            bin_arr = None
-            for idx in large_rows:
-                if bin_arr is None:
-                    bin_arr = np.array([bin_data[idx][2], None], dtype=object)
-                    gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
-                    gen_pattern.add_gradual_item(gi)
-                    continue
-                else:
-                    bin_arr[1] = bin_data[idx][2]
-                    temp_bin, supp = self.bin_and(bin_arr)
-                    if supp >= min_supp:
-                        bin_arr[0] = temp_bin
-                        gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
-                        gen_pattern.add_gradual_item(gi)
-                        gen_pattern.set_support(supp)
-
-        if len(gen_pattern.gradual_items) <= 1:
-            return pattern
-        else:
-            return gen_pattern
+        self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
 
     def bin_and(self, bins):
         n = self.d_set.row_count
@@ -181,7 +142,12 @@ class GradACO:
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
         d = self.d_set.read_h5_dataset(grp_name)
         if d.size > 0:
-            return d
+            # 1b. Fetch valid bins group
+            grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
+            h5f = h5py.File(self.d_set.h5_file, 'r')
+            attr_keys = list(h5f[grp_name].keys())
+            h5f.close()
+            return d, attr_keys
 
         # 1b. Fetch valid bins group
         grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
@@ -209,7 +175,7 @@ class GradACO:
         h5f.close()
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
         self.d_set.add_h5_dataset(grp_name, d)
-        return d
+        return d, attr_keys
 
     def run_ant_colony(self):
         min_supp = self.d_set.thd_supp
@@ -316,3 +282,38 @@ class GradACO:
                 p_matrix[j][i] += 1
         print(p_matrix)
         return p_matrix
+
+    def validate_gp(self, pattern):
+        # return GP()
+        # pattern = [('2', '+'), ('4', '+')]
+        # n = self.d_set.row_count
+        min_supp = self.d_set.thd_supp
+        # seg_count = 0
+        gen_pattern = GP()
+        arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
+        if len(arg) >= 2:
+            bin_data = self.d_set.valid_bins[arg.flatten()]
+            segments = np.stack(bin_data[:, 1])
+            large_col_sum = segments.sum(axis=0)
+            large_rows = np.argsort(-segments[:, large_col_sum.argmax()])
+            bin_arr = None
+            for idx in large_rows:
+                if bin_arr is None:
+                    bin_arr = np.array([bin_data[idx][2], None], dtype=object)
+                    gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
+                    gen_pattern.add_gradual_item(gi)
+                    continue
+                else:
+                    bin_arr[1] = bin_data[idx][2]
+                    temp_bin, supp = self.bin_and(bin_arr)
+                    if supp >= min_supp:
+                        bin_arr[0] = temp_bin
+                        gi = GI(bin_data[idx][0][0], bin_data[idx][0][1].decode())
+                        gen_pattern.add_gradual_item(gi)
+                        gen_pattern.set_support(supp)
+
+        if len(gen_pattern.gradual_items) <= 1:
+            return pattern
+        else:
+            return gen_pattern
+
