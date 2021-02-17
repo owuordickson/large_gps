@@ -201,5 +201,5 @@ class TGP(GP):
         self.support = gp.support
         self.time_lag = t_lag
 
-    def set_timeLag(self, t_lag):
+    def set_timelag(self, t_lag):
         self.time_lag = t_lag

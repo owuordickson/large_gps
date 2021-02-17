@@ -33,55 +33,11 @@ class GradACO:
         self.attr_keys = list(h5f[grp_name].keys())
         h5f.close()
 
-    def run_ant_colony_old(self):
-        min_supp = self.d_set.thd_supp
-        winner_gps = list()  # subsets
-        loser_gps = list()  # supersets
-        repeated = 0
-        it_count = 0
-        if self.d_set.no_bins:
-            return []
-        # while repeated < 1:
-        while it_count <= 10:
-            rand_gp = self.generate_random_gp()
-            if len(rand_gp.gradual_items) > 1:
-                # print(rand_gp.get_pattern())
-                exits = GradACO.is_duplicate(rand_gp, winner_gps, loser_gps)
-                if not exits:
-                    repeated = 0
-                    # check for anti-monotony
-                    is_super = GradACO.check_anti_monotony(loser_gps, rand_gp, subset=False)
-                    is_sub = GradACO.check_anti_monotony(winner_gps, rand_gp, subset=True)
-                    if is_super or is_sub:
-                        continue
-                    gen_gp = self.validate_gp(rand_gp)
-                    is_present = GradACO.is_duplicate(gen_gp, winner_gps, loser_gps)
-                    is_sub = GradACO.check_anti_monotony(winner_gps, gen_gp, subset=True)
-                    if is_present or is_sub:
-                        repeated += 1
-                    else:
-                        if gen_gp.support >= min_supp:
-                            self.update_pheromone(gen_gp)
-                            winner_gps.append(gen_gp)
-                        else:
-                            loser_gps.append(gen_gp)
-                            # update pheromone as irrelevant with loss_sols
-                            self.evaporate_pheromone(gen_gp)
-                    if set(gen_gp.get_pattern()) != set(rand_gp.get_pattern()):
-                        loser_gps.append(rand_gp)
-                else:
-                    repeated += 1
-            it_count += 1
-        self.iteration_count = it_count
-        grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
-        self.d_set.add_h5_dataset(grp, self.p_matrix)
-        return winner_gps
-
     def validate_gp(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
-        n = self.d_set.row_count
+        # n = self.d_set.row_count
         min_supp = self.d_set.thd_supp
-        seg_count = 0
+        # seg_count = 0
         gen_pattern = GP()
         arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], pattern.get_np_pattern()))
         if len(arg) >= 2:
@@ -348,7 +304,7 @@ class GradACO:
         return pattern, p_matrix
 
     def update_pheromones(self, pattern, p_matrix):
-        v_matrix  = self.d
+        v_matrix = self.d
         idx = [self.attr_keys.index(x.as_string()) for x in pattern.gradual_items]
         combs = list(combinations(idx, 2))
         print(idx)

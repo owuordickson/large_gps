@@ -125,7 +125,7 @@ class Dataset:
                 # valid_bins.append(np.array([incr.tolist(), arr_pos[0], arr_pos[1]], dtype=object))
                 grp_name = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
                 grp = h5f.create_group(grp_name)
-                temp_dict = dict(attr=incr.tolist(), segs=arr_pos[0])#, bin=arr_pos[1])
+                temp_dict = dict(attr=incr.tolist(), segs=arr_pos[0])
                 for k, v in temp_dict.items():
                     grp.create_dataset(k, data=v)
                 bins_zip = zip(np.arange(arr_pos[0].size), arr_pos[1])
@@ -142,7 +142,7 @@ class Dataset:
                 grp_name = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
                 grp = h5f.create_group(grp_name)
                 # self.add_h5_dataset(grp, np.array([decr.tolist(), arr_neg[1]]))
-                temp_dict = dict(attr=decr.tolist(), segs=arr_neg[0])#, bin=arr_neg[1])
+                temp_dict = dict(attr=decr.tolist(), segs=arr_neg[0])
                 for k, v in temp_dict.items():
                     grp.create_dataset(k, data=v)
                 bins_zip = zip(np.arange(arr_neg[0].size), arr_neg[1])
