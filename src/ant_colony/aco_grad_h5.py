@@ -312,15 +312,18 @@ class GradACO:
         repeated = 0
         it_count = 0
 
-        # 1. Retrieve/Generate distance matrix
+        if self.d_set.no_bins:
+            return []
+
+        # 1. Retrieve/Generate distance matrix (d)
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
         d = self.d_set.read_h5_dataset(grp_name)
         if d.size <= 0:
             d = self.generate_d()
         print(d)
 
-        if self.d_set.no_bins:
-            return []
+        # Save pheromone matrix (p_matrix)
+        self.iteration_count = it_count
         grp = 'dataset/' + self.d_set.step_name + '/p_matrix'
         self.d_set.add_h5_dataset(grp, self.p_matrix)
         return winner_gps
