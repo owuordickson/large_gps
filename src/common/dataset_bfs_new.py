@@ -3,10 +3,10 @@
 @author: "Dickson Owuor"
 @credits: "Anne Laurent"
 @license: "MIT"
-@version: "2.2"
+@version: "3.0"
 @email: "owuordickson@gmail.com"
 @created: "12 July 2019"
-@modified: "25 May 2020"
+@modified: "17 Feb 2021"
 
 Changes
 -------
@@ -25,67 +25,23 @@ import gc
 
 class Dataset:
 
-    def __init__(self, file_path, min_sup=0, eq=False):
-        data = Dataset.read_csv(file_path)
-        if len(data) <= 1:
-            self.data = np.array([])
-            data = None
-            print("csv file read error")
-            raise Exception("Unable to read csv file or file has no data")
-        else:
-            print("Data fetched from csv file")
-            self.data = np.array([])
-            self.title = self.get_title(data)  # optimized (numpy)
-            self.time_cols = self.get_time_cols()  # optimized (numpy)
-            self.attr_cols = self.get_attributes()  # optimized (numpy)
-            self.column_size = self.get_attribute_no()  # optimized (numpy)
-            self.size = self.get_size()  # optimized (numpy)
-            self.no_bins = False
-            self.attr_size = 0
-            self.step_name = ''
-            self.thd_supp = min_sup
-            self.equal = eq
-            self.invalid_bins = np.array([])
-            self.valid_bins = np.array([])
-            data = None
-            # self.init_attributes()
+    def __init__(self, file_path, min_sup=0.5, eq=False):
+        self.thd_supp = min_sup
+        self.equal = eq
+        self.titles, self.data = Dataset.read_csv(file_path)
+        self.row_count, self.col_count = self.data.shape
+        self.time_cols = self.get_time_cols()
+        self.attr_cols = self.get_attr_cols()
+        self.invalid_bins = np.array([])
+        self.valid_bins = np.array([])
+        self.no_bins = False
+        self.seg_sums = np.array([])
+        self.step_name = ''  # For T-GRAANK
+        self.attr_size = 0  # For T-GRAANK
+        # self.init_attributes()
 
-    def get_size(self):
-        size = self.data.shape[0]
-        return size
-
-    def get_attribute_no(self):
-        count = self.data.shape[1]
-        return count
-
-    def get_title(self, data):
-        # data = self.raw_data
-        if data[0][0].replace('.', '', 1).isdigit() or data[0][0].isdigit():
-            title = self.convert_data_to_array(data)
-            return title
-        else:
-            if data[0][1].replace('.', '', 1).isdigit() or data[0][1].isdigit():
-                title = self.convert_data_to_array(data)
-                return title
-            else:
-                title = self.convert_data_to_array(data, has_title=True)
-                return title
-
-    def convert_data_to_array(self, data, has_title=False):
-        # convert csv data into array
-        title = np.array([])
-        if has_title:
-            keys = np.arange(len(data[0]))
-            values = np.array(data[0], dtype='S')
-            title = np.rec.fromarrays((keys, values), names=('key', 'value'))
-            data = np.delete(data, 0, 0)
-        # convert csv data into array
-        self.data = np.asarray(data)
-        return title
-
-    def get_attributes(self):
-        all_cols = np.arange(self.get_attribute_no())
-        # attr_cols = np.delete(all_cols, self.time_cols)
+    def get_attr_cols(self):
+        all_cols = np.arange(self.col_count)
         attr_cols = np.setdiff1d(all_cols, self.time_cols)
         return attr_cols
 
@@ -108,23 +64,16 @@ class Dataset:
         else:
             return np.array([])
 
-    def init_gp_attributes(self):
+    def init_gp_attributes(self, attr_data=None):
         # (check) implement parallel multiprocessing
-        # transpose csv array data
-        attr_data = self.data.copy().T
-        self.attr_size = len(attr_data[self.attr_cols[0]])
-        # construct and store 1-item_set valid bins
-        self.construct_bins(attr_data)
-        attr_data = None
-        gc.collect()
+        # 1. Transpose csv array data
+        if attr_data is None:
+            attr_data = self.data.T
+            self.attr_size = self.row_count
+        else:
+            self.attr_size = len(attr_data[self.attr_cols[0]])
 
-    def update_gp_attributes(self, attr_data):
-        self.attr_size = len(attr_data[self.attr_cols[0]])
-        # self.construct_bins_v1(attr_data)
-        self.construct_bins(attr_data)
-        gc.collect()
-
-    def construct_bins(self, attr_data):
+        # 2. Construct and store 1-item_set valid bins
         # execute binary rank to calculate support of pattern
         n = self.attr_size
         valid_bins = list()
@@ -145,6 +94,7 @@ class Dataset:
         self.invalid_bins = np.array(invalid_bins)
         if len(self.valid_bins) < 3:
             self.no_bins = True
+        gc.collect()
 
     @staticmethod
     def bin_rank(arr, equal=False):
@@ -158,14 +108,37 @@ class Dataset:
 
     @staticmethod
     def read_csv(file):
-        # 1. retrieve data-set from file
-        with open(file, 'r') as f:
-            dialect = csv.Sniffer().sniff(f.readline(), delimiters=";,' '\t")
-            f.seek(0)
-            reader = csv.reader(f, dialect)
-            temp = list(reader)
-            f.close()
-        return temp
+        # 1. Retrieve data set from file
+        try:
+            with open(file, 'r') as f:
+                dialect = csv.Sniffer().sniff(f.readline(), delimiters=";,' '\t")
+                f.seek(0)
+                reader = csv.reader(f, dialect)
+                raw_data = list(reader)
+                f.close()
+
+            if len(raw_data) <= 1:
+                print("Unable to read CSV file")
+                raise Exception("CSV file read error. File has little or no data")
+            else:
+                print("Data fetched from CSV file")
+                # 2. Get table headers
+                if raw_data[0][0].replace('.', '', 1).isdigit() or raw_data[0][0].isdigit():
+                    titles = np.array([])
+                else:
+                    if raw_data[0][1].replace('.', '', 1).isdigit() or raw_data[0][1].isdigit():
+                        titles = np.array([])
+                    else:
+                        # titles = self.convert_data_to_array(data, has_title=True)
+                        keys = np.arange(len(raw_data[0]))
+                        values = np.array(raw_data[0], dtype='S')
+                        titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
+                        raw_data = np.delete(raw_data, 0, 0)
+                return titles, np.asarray(raw_data)
+                # return Dataset.get_tbl_headers(temp)
+        except Exception as error:
+            print("Unable to read CSV file")
+            raise Exception("CSV file read error. " + str(error))
 
     @staticmethod
     def test_time(date_str):
