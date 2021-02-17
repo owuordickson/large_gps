@@ -17,28 +17,51 @@ Changes
 
 """
 import csv
+import h5py
 from dateutil.parser import parse
 import time
 import numpy as np
 import gc
+import os
+from pathlib import Path
 
 
 class Dataset:
 
     def __init__(self, file_path, min_sup=0.5, eq=False):
-        self.thd_supp = min_sup
-        self.equal = eq
-        self.titles, self.data = Dataset.read_csv(file_path)
-        self.row_count, self.col_count = self.data.shape
-        self.time_cols = self.get_time_cols()
-        self.attr_cols = self.get_attr_cols()
-        self.invalid_bins = np.array([])
-        self.valid_bins = np.array([])
-        self.no_bins = False
-        self.seg_sums = np.array([])
-        self.step_name = ''  # For T-GRAANK
-        self.attr_size = 0  # For T-GRAANK
-        # self.init_attributes()
+        self.h5_file = str(Path(file_path).stem) + str('.h5')
+        if os.path.exists(self.h5_file):
+            print("Fetching data from h5 file")
+            h5f = h5py.File(self.h5_file, 'r')
+            self.titles = h5f['dataset/titles'][:]
+            self.time_cols = h5f['dataset/time_cols'][:]
+            self.attr_cols = h5f['dataset/attr_cols'][:]
+            size = h5f['dataset/size'][:]
+            self.col_count = size[0]
+            self.row_count = size[1]
+            self.attr_size = size[2]
+            self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
+            self.invalid_bins = h5f['dataset/' + self.step_name + '/invalid_bins'][:]
+            h5f.close()
+            self.thd_supp = min_sup
+            self.equal = eq
+            n = (self.attr_cols.size * 2) - self.invalid_bins.size
+            if n > 0:
+                self.no_bins = False
+            else:
+                self.invalid_bins = True
+        else:
+            self.thd_supp = min_sup
+            self.equal = eq
+            self.titles, self.data = Dataset.read_csv(file_path)
+            self.row_count, self.col_count = self.data.shape
+            self.time_cols = self.get_time_cols()
+            self.attr_cols = self.get_attr_cols()
+            self.invalid_bins = np.array([])
+            self.no_bins = False
+            self.step_name = ''  # For T-GRAANK
+            self.attr_size = 0  # For T-GRAANK
+            self.init_gp_attributes()
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)
@@ -71,7 +94,7 @@ class Dataset:
         # 2. Construct and store 1-item_set valid bins
         # execute binary rank to calculate support of pattern
         n = self.attr_size
-        valid_bins = list()
+        valid_count = 0
         invalid_bins = list()
         for col in self.attr_cols:
             col_data = np.array(attr_data[col], dtype=float)
@@ -93,13 +116,51 @@ class Dataset:
                     invalid_bins.append(incr)
                     invalid_bins.append(decr)
                 else:
-                    valid_bins.append(np.array([incr.tolist(), temp_pos], dtype=object))
-                    valid_bins.append(np.array([decr.tolist(), temp_pos.T], dtype=object))
-        self.valid_bins = np.array(valid_bins)
+                    grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
+                    self.add_h5_dataset(grp, temp_pos)
+                    grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
+                    self.add_h5_dataset(grp, temp_pos.T)
+                    valid_count += 1
         self.invalid_bins = np.array(invalid_bins)
-        if len(self.valid_bins) < 3:
+        grp = 'dataset/' + self.step_name + '/invalid_bins'
+        self.add_h5_dataset(grp, self.invalid_bins)
+        data_size = np.array([self.col_count, self.row_count, self.attr_size])
+        self.add_h5_dataset('dataset/size', data_size)
+        if valid_count < 3:
             self.no_bins = True
         gc.collect()
+
+    def init_h5_groups(self):
+        if os.path.exists(self.h5_file):
+            pass
+        else:
+            h5f = h5py.File(self.h5_file, 'w')
+            grp = h5f.require_group('dataset')
+            grp.create_dataset('titles', data=self.titles)
+            grp.create_dataset('data', data=np.array(self.data.copy()).astype('S'), compression="gzip",
+                               compression_opts=9)
+            grp.create_dataset('time_cols', data=self.time_cols)
+            grp.create_dataset('attr_cols', data=self.attr_cols)
+            h5f.close()
+            self.data = None
+
+    def read_h5_dataset(self, group, seg=None):
+        temp = np.array([])
+        h5f = h5py.File(self.h5_file, 'r')
+        if group in h5f:
+            if seg is None:
+                temp = h5f[group][:]
+            else:
+                temp = h5f[group][seg]
+        h5f.close()
+        return temp
+
+    def add_h5_dataset(self, group, data):
+        h5f = h5py.File(self.h5_file, 'r+')
+        if group in h5f:
+            del h5f[group]
+        h5f.create_dataset(group, data=data, compression="gzip", compression_opts=9)
+        h5f.close()
 
     @staticmethod
     def read_csv(file):
