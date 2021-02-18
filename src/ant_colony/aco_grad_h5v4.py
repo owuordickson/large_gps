@@ -178,27 +178,28 @@ class GradACO:
         if len(bin_grps) >= 2:
             temp_file1 = 'temp_m.dat'
             temp_file2 = 'temp_t.dat'
-            # print(bin_grps[0].shape)
             main_bin = np.memmap(temp_file1, dtype=bool, mode='w+', shape=bin_grps[0].shape)
             temp_bin = np.memmap(temp_file2, dtype=bool, mode='w+', shape=bin_grps[0].shape)
             gi = GI.parse_gi(bin_keys[0])
             gen_pattern.add_gradual_item(gi)
             for i in range(len(bin_grps)):
+                bin_sum = 0
                 for k in bin_grps[0].iter_chunks():
                     if i == 0:
                         main_bin[k] = bin_grps[i][k]
                     else:
                         temp_bin[k] = np.multiply(main_bin[k], bin_grps[i][k])
-                supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
+                        bin_sum += np.sum(temp_bin[k])
+                supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
                 if supp >= min_supp:
                     gi = GI.parse_gi(bin_keys[i])
                     gen_pattern.add_gradual_item(gi)
                     gen_pattern.set_support(supp)
                     for s in bin_grps[0].iter_chunks():
                         main_bin[s] = temp_bin[s]
+            os.remove(temp_file1)
+            os.remove(temp_file2)
         h5f.close()
-        os.remove(temp_file1)
-        os.remove(temp_file2)
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
         else:
