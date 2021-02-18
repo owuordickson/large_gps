@@ -35,7 +35,7 @@ class GradACO:
             # 1b. Fetch valid bins group
             grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
             h5f = h5py.File(self.d_set.h5_file, 'r')
-            attr_keys = list(h5f[grp_name].keys())
+            attr_keys = [GI.parse_gi(x) for x in list(h5f[grp_name].keys())]
             h5f.close()
             return d, attr_keys
 
@@ -43,18 +43,18 @@ class GradACO:
         grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
         h5f = h5py.File(self.d_set.h5_file, 'r')
         grp = h5f[grp_name]
-        attr_keys = list(grp.keys())
+        attr_keys = [GI.parse_gi(x) for x in list(grp.keys())]
 
         # 2. Initialize an empty d-matrix
         n = len(grp)
         d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
-        for k in grp[attr_keys[0]].iter_chunks():
+        for k in grp[attr_keys[0].as_string()].iter_chunks():
             # 3. For each segment do a binary AND
             for i in range(n):
                 for j in range(n):
-                    bin_1 = grp[attr_keys[i]]
-                    bin_2 = grp[attr_keys[j]]
-                    if GI.parse_gi(attr_keys[i]).attribute_col == GI.parse_gi(attr_keys[j]).attribute_col:
+                    bin_1 = grp[attr_keys[i].as_string()]
+                    bin_2 = grp[attr_keys[j].as_string()]
+                    if attr_keys[i].attribute_col == attr_keys[j].attribute_col:
                         # Ignore similar attributes (+ or/and -)
                         continue
                     else:
@@ -165,19 +165,34 @@ class GradACO:
 
     def validate_gp(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
-        gen_pattern = GP()
+        n = self.d_set.attr_size
+        # min_supp = self.d_set.thd_supp
+        # gen_pattern = GP()
 
         h5f = h5py.File(self.d_set.h5_file, 'r')
         grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
         bin_keys = [gi.as_string() for gi in pattern.gradual_items]
         bin_grps = [h5f[grp_name + k] for k in bin_keys]
 
+        if len(bin_grps) >= 2:
+            bin_sum = 0
+            for k in bin_grps[0].iter_chunks():
+                temp_bin = None
+                for i in range(len(bin_grps)):
+                    if i == 0:
+                        temp_bin = bin_grps[i][k]
+                    else:
+                        temp_bin = np.multiply(temp_bin, bin_grps[i][k])
+                bin_sum += np.sum(temp_bin)
 
+            supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+            pattern.set_support(supp)
         h5f.close()
-        if len(gen_pattern.gradual_items) <= 1:
-            return pattern
-        else:
-            return gen_pattern
+        return pattern
+        # if len(gen_pattern.gradual_items) <= 1:
+        #    return pattern
+        # else:
+        #    return gen_pattern
 
     @staticmethod
     def check_anti_monotony(lst_p, pattern, subset=True):
@@ -209,3 +224,30 @@ class GradACO:
                     set(pattern.inv_pattern()) == set(pat.get_pattern()):
                 return True
         return False
+
+    def validate_gp_old(self, pattern):
+        # pattern = [('2', '+'), ('4', '+')]
+        min_supp = self.d_set.thd_supp
+        gen_pattern = GP()
+        bin_data = np.array([])
+
+        for gi in pattern.gradual_items:
+            if self.d_set.invalid_bins.size > 0 and np.any(np.isin(self.d_set.invalid_bins, gi.gradual_item)):
+                continue
+            else:
+                grp = 'dataset/' + self.d_set.step_name + '/valid_bins/' + gi.as_string()
+                temp = self.d_set.read_h5_dataset(grp)
+                if bin_data.size <= 0:
+                    bin_data = np.array([temp, temp])
+                    gen_pattern.add_gradual_item(gi)
+                else:
+                    bin_data[1] = temp
+                    temp_bin, supp = self.bin_and(bin_data, self.d_set.attr_size)
+                    if supp >= min_supp:
+                        bin_data[0] = temp_bin
+                        gen_pattern.add_gradual_item(gi)
+                        gen_pattern.set_support(supp)
+        if len(gen_pattern.gradual_items) <= 1:
+            return pattern
+        else:
+            return gen_pattern

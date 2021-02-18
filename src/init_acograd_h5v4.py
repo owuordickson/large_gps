@@ -33,7 +33,7 @@ def init_algorithm(f_path, min_supp, cores):
             num_cores = Profile.get_num_cores()
 
         ac = GradACO(f_path, min_supp)
-        list_gp = []  # ac.run_ant_colony()
+        list_gp = ac.run_ant_colony()
 
         wr_line = "Algorithm: ACO-GRAANK HF5 (v4.0)\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
@@ -85,13 +85,13 @@ if __name__ == "__main__":
                              dest='file',
                              help='path to file containing csv',
                              # default=None,
-                             default='../data/DATASET.csv',
+                             # default='../data/DATASET.csv',
                              # default='../data/DATASET3.csv',
                              # default='../data/Omnidir.csv',
                              # default='../data/FluTopicData-testsansdate-blank.csv',
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
-                             # default='../data/c2k_02k.csv',
+                             default='../data/c2k_02k.csv',
                              # default='../data/Directio_site15k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
@@ -129,4 +129,4 @@ if __name__ == "__main__":
     wr_text += str(res_text)
     f_name = str('res_acoh5' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
-    # print(wr_text)
+    print(wr_text)
