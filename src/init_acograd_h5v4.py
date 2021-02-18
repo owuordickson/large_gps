@@ -85,14 +85,14 @@ if __name__ == "__main__":
                              dest='file',
                              help='path to file containing csv',
                              # default=None,
-                             # default='../data/DATASET.csv',
+                             default='../data/DATASET.csv',
                              # default='../data/DATASET3.csv',
                              # default='../data/Omnidir.csv',
                              # default='../data/FluTopicData-testsansdate-blank.csv',
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
                              # default='../data/c2k_02k.csv',
-                             default='../data/Directio_site15k.csv',
+                             # default='../data/Directio_site15k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
                              dest='minSup',
@@ -129,4 +129,4 @@ if __name__ == "__main__":
     wr_text += str(res_text)
     f_name = str('res_acoh5' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
-    print(wr_text)
+    # print(wr_text)
