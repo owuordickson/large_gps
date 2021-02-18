@@ -36,26 +36,24 @@ class Dataset:
             self.titles = h5f['dataset/titles'][:]
             self.time_cols = h5f['dataset/time_cols'][:]
             self.attr_cols = h5f['dataset/attr_cols'][:]
-            size = h5f['dataset/size'][:]
+            size = h5f['dataset/size_arr'][:]
             self.col_count = size[0]
             self.row_count = size[1]
             self.attr_size = size[2]
+            valid_count = size[3]
             self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
-            self.invalid_bins = h5f['dataset/' + self.step_name + '/invalid_bins'][:]
             h5f.close()
             self.thd_supp = min_sup
-            n = (self.attr_cols.size * 2) - self.invalid_bins.size
-            if n > 0:
-                self.no_bins = False
+            if valid_count < 3:
+                self.no_bins = True
             else:
-                self.invalid_bins = True
+                self.no_bins = False
         else:
             self.thd_supp = min_sup
             self.titles, self.data = Dataset.read_csv(file_path)
             self.row_count, self.col_count = self.data.shape
             self.time_cols = self.get_time_cols()
             self.attr_cols = self.get_attr_cols()
-            self.invalid_bins = np.array([])
             self.no_bins = False
             self.step_name = ''  # For T-GRAANK
             self.attr_size = 0  # For T-GRAANK
@@ -98,7 +96,6 @@ class Dataset:
         # execute binary rank to calculate support of pattern
         n = self.attr_size
         valid_count = 0
-        invalid_bins = list()
         for col in self.attr_cols:
             col_data = np.array(attr_data[col], dtype=float)
             incr = np.array((col, '+'), dtype='i, S1')
@@ -116,19 +113,14 @@ class Dataset:
                 bin_sum += np.sum(temp_pos[s])
             supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
             if supp < self.thd_supp:
-                invalid_bins.append(incr)
-                invalid_bins.append(decr)
                 del h5f[grp]
             else:
                 grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
                 h5f.create_dataset(grp, data=col_data < col_data[:, np.newaxis], chunks=True)
-                valid_count += 1
+                valid_count += 2
         h5f.close()
-        self.invalid_bins = np.array(invalid_bins)
-        grp = 'dataset/' + self.step_name + '/invalid_bins'
-        self.add_h5_dataset(grp, self.invalid_bins)
-        data_size = np.array([self.col_count, self.row_count, self.attr_size])
-        self.add_h5_dataset('dataset/size', data_size)
+        data_size = np.array([self.col_count, self.row_count, self.attr_size, valid_count])
+        self.add_h5_dataset('dataset/size_arr', data_size)
         if valid_count < 3:
             self.no_bins = True
         gc.collect()

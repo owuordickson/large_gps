@@ -49,7 +49,7 @@ class Dataset:
             if n > 0:
                 self.no_bins = False
             else:
-                self.invalid_bins = True
+                self.no_bins = True
             # self.data = None
         else:
             self.thd_supp = min_sup

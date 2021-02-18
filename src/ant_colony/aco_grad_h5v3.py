@@ -10,7 +10,6 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
-import os
 import h5py
 import numpy as np
 from itertools import combinations

@@ -33,7 +33,7 @@ def init_algorithm(f_path, min_supp, cores):
             num_cores = Profile.get_num_cores()
 
         ac = GradACO(f_path, min_supp)
-        list_gp = []#ac.run_ant_colony()
+        list_gp = []  # ac.run_ant_colony()
 
         wr_line = "Algorithm: ACO-GRAANK HF5 (v4.0)\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'

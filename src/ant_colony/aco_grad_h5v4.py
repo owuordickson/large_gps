@@ -165,28 +165,14 @@ class GradACO:
 
     def validate_gp(self, pattern):
         # pattern = [('2', '+'), ('4', '+')]
-        min_supp = self.d_set.thd_supp
-        n = self.d_set.attr_size
         gen_pattern = GP()
-        bin_arr = np.array([])
 
         h5f = h5py.File(self.d_set.h5_file, 'r')
-        for gi in pattern.gradual_items:
-            if self.d_set.invalid_bins.size > 0 and np.any(np.isin(self.d_set.invalid_bins, gi.gradual_item)):
-                continue
-            else:
-                grp = 'dataset/' + self.d_set.step_name + '/valid_bins/' + gi.as_string()
-                if bin_arr.size <= 0:
-                    bin_arr = np.array([valid_bin[1], valid_bin[1]])
-                    gen_pattern.add_gradual_item(gi)
-                else:
-                    bin_arr[1] = valid_bin[1]
-                    temp_bin = np.multiply(bin_arr[0], bin_arr[1])
-                    supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
-                    if supp >= min_supp:
-                        bin_arr[0] = temp_bin
-                        gen_pattern.add_gradual_item(gi)
-                        gen_pattern.set_support(supp)
+        grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
+        bin_keys = [gi.as_string() for gi in pattern.gradual_items]
+        bin_grps = [h5f[grp_name + k] for k in bin_keys]
+
+
         h5f.close()
         if len(gen_pattern.gradual_items) <= 1:
             return pattern

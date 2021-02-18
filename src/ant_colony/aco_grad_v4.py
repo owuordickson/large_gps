@@ -150,24 +150,21 @@ class GradACO:
         bin_arr = np.array([])
 
         for gi in pattern.gradual_items:
-            if self.d_set.invalid_bins.size > 0 and np.any(np.isin(self.d_set.invalid_bins, gi.gradual_item)):
-                continue
-            else:
-                arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], gi.gradual_item))
-                if len(arg) > 0:
-                    i = arg[0][0]
-                    valid_bin = self.d_set.valid_bins[i]
-                    if bin_arr.size <= 0:
-                        bin_arr = np.array([valid_bin[1], valid_bin[1]])
+            arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], gi.gradual_item))
+            if len(arg) > 0:
+                i = arg[0][0]
+                valid_bin = self.d_set.valid_bins[i]
+                if bin_arr.size <= 0:
+                    bin_arr = np.array([valid_bin[1], valid_bin[1]])
+                    gen_pattern.add_gradual_item(gi)
+                else:
+                    bin_arr[1] = valid_bin[1]
+                    temp_bin = np.multiply(bin_arr[0], bin_arr[1])
+                    supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
+                    if supp >= min_supp:
+                        bin_arr[0] = temp_bin
                         gen_pattern.add_gradual_item(gi)
-                    else:
-                        bin_arr[1] = valid_bin[1]
-                        temp_bin = np.multiply(bin_arr[0], bin_arr[1])
-                        supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
-                        if supp >= min_supp:
-                            bin_arr[0] = temp_bin
-                            gen_pattern.add_gradual_item(gi)
-                            gen_pattern.set_support(supp)
+                        gen_pattern.set_support(supp)
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
         else:

@@ -32,7 +32,6 @@ class Dataset:
         self.row_count, self.col_count = self.data.shape
         self.time_cols = self.get_time_cols()
         self.attr_cols = self.get_attr_cols()
-        self.invalid_bins = np.array([])
         self.valid_bins = np.array([])
         self.no_bins = False
         self.seg_sums = np.array([])
@@ -72,7 +71,6 @@ class Dataset:
         # execute binary rank to calculate support of pattern
         n = self.attr_size
         valid_bins = list()
-        invalid_bins = list()
         for col in self.attr_cols:
             col_data = np.array(attr_data[col], dtype=float)
             incr = np.array((col, '+'), dtype='i, S1')
@@ -89,14 +87,10 @@ class Dataset:
 
                 # 2b. Check support of each generated itemset
                 supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
-                if supp < self.thd_supp:
-                    invalid_bins.append(incr)
-                    invalid_bins.append(decr)
-                else:
+                if supp >= self.thd_supp:
                     valid_bins.append(np.array([incr.tolist(), temp_pos], dtype=object))
                     valid_bins.append(np.array([decr.tolist(), temp_pos.T], dtype=object))
         self.valid_bins = np.array(valid_bins)
-        self.invalid_bins = np.array(invalid_bins)
         if len(self.valid_bins) < 3:
             self.no_bins = True
         gc.collect()
