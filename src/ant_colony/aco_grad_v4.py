@@ -30,14 +30,14 @@ class GradACO:
     def generate_d(self):
         v_bins = self.d_set.valid_bins
         # 1. Fetch valid bins group
-        attr_keys = [GI(x[0], x[1].decode()) for x in v_bins[:, 0]]
+        attr_keys = [GI(x[0], x[1].decode()).as_string() for x in v_bins[:, 0]]
 
         # 2. Initialize an empty d-matrix
         n = len(attr_keys)
         d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
         for i in range(n):
             for j in range(n):
-                if attr_keys[i].attribute_col == attr_keys[j].attribute_col:
+                if GI.parse_gi(attr_keys[i]).attribute_col == GI.parse_gi(attr_keys[j]).attribute_col:
                     # Ignore similar attributes (+ or/and -)
                     continue
                 else:
@@ -124,7 +124,7 @@ class GradACO:
             r = np.random.random_sample()
             try:
                 j = np.nonzero(cum_prob > r)[0][0]
-                gi = attr_keys[j]
+                gi = GI.parse_gi(attr_keys[j])
                 if not pattern.contains_attr(gi):
                     pattern.add_gradual_item(gi)
             except IndexError:
@@ -135,7 +135,7 @@ class GradACO:
         return pattern, p_matrix
 
     def update_pheromones(self, pattern, p_matrix):
-        idx = [self.attr_keys.index(x) for x in pattern.gradual_items]
+        idx = [self.attr_keys.index(x.as_string()) for x in pattern.gradual_items]
         combs = list(combinations(idx, 2))
         for i, j in combs:
             p_matrix[i][j] += 1
@@ -158,11 +158,11 @@ class GradACO:
                     bin_arr = np.array([valid_bin[1], valid_bin[1]])
                     gen_pattern.add_gradual_item(gi)
                 else:
-                    bin_arr[1] = valid_bin[1]
+                    bin_arr[1] = valid_bin[1].copy()
                     temp_bin = np.multiply(bin_arr[0], bin_arr[1])
                     supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
                     if supp >= min_supp:
-                        bin_arr[0] = temp_bin
+                        bin_arr[0] = temp_bin.copy()
                         gen_pattern.add_gradual_item(gi)
                         gen_pattern.set_support(supp)
         if len(gen_pattern.gradual_items) <= 1:

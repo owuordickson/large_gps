@@ -107,17 +107,17 @@ class Dataset:
                 grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
                 temp_pos = h5f.create_dataset(grp, data=col_data > col_data[:, np.newaxis], chunks=True)
 
-            # 3b. Check support of each generated itemset
-            bin_sum = 0
-            for s in temp_pos.iter_chunks():
-                bin_sum += np.sum(temp_pos[s])
-            supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-            if supp < self.thd_supp:
-                del h5f[grp]
-            else:
-                grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
-                h5f.create_dataset(grp, data=col_data < col_data[:, np.newaxis], chunks=True)
-                valid_count += 2
+                # 3b. Check support of each generated itemset
+                bin_sum = 0
+                for s in temp_pos.iter_chunks():
+                    bin_sum += np.sum(temp_pos[s])
+                supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+                if supp < self.thd_supp:
+                    del h5f[grp]
+                else:
+                    grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
+                    h5f.create_dataset(grp, data=col_data < col_data[:, np.newaxis], chunks=True)
+                    valid_count += 2
         h5f.close()
         data_size = np.array([self.col_count, self.row_count, self.attr_size, valid_count])
         self.add_h5_dataset('dataset/size_arr', data_size)
