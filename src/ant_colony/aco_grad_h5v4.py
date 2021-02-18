@@ -191,24 +191,11 @@ class GradACO:
                         temp_bin[k] = np.multiply(main_bin[k], bin_grps[i][k])
                 supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
                 if supp >= min_supp:
-                    # main_bin = temp_bin.copy()
                     gi = GI.parse_gi(bin_keys[i])
                     gen_pattern.add_gradual_item(gi)
                     gen_pattern.set_support(supp)
                     for s in bin_grps[0].iter_chunks():
                         main_bin[s] = temp_bin[s]
-
-            # for k in bin_grps[0].iter_chunks():
-            #    temp_bin = None
-            #    for i in range(len(bin_grps)):
-            #        if i == 0:
-            #            temp_bin = bin_grps[i][k]
-            #        else:
-            #            temp_bin = np.multiply(temp_bin, bin_grps[i][k])
-            #    bin_sum += np.sum(temp_bin)
-
-            # supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-            # pattern.set_support(supp)
         h5f.close()
         os.remove(temp_file1)
         os.remove(temp_file2)
