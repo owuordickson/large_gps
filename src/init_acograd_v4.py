@@ -24,14 +24,14 @@ from optparse import OptionParser
 from ant_colony.aco_grad_v4 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores, eq=False):
+def init_algorithm(f_path, min_supp, cores):
     try:
         if cores > 1:
             num_cores = cores
         else:
             num_cores = Profile.get_num_cores()
 
-        ac = GradACO(f_path, min_supp, eq)
+        ac = GradACO(f_path, min_supp)
         list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
@@ -77,8 +77,7 @@ if __name__ == "__main__":
     if not sys.argv:
         filePath = sys.argv[1]
         minSup = sys.argv[2]
-        allowEq = sys.argv[3]
-        numCores = sys.argv[4]
+        numCores = sys.argv[3]
     else:
         optparser = OptionParser()
         optparser.add_option('-f', '--inputFile',
@@ -99,11 +98,6 @@ if __name__ == "__main__":
                              help='minimum support value',
                              default=0.5,
                              type='float')
-        optparser.add_option('-e', '--allowEqual',
-                             dest='allowEq',
-                             help='allow equal',
-                             default=None,
-                             type='int')
         optparser.add_option('-c', '--cores',
                              dest='numCores',
                              help='number of cores',
@@ -117,7 +111,6 @@ if __name__ == "__main__":
         else:
             filePath = options.file
         minSup = options.minSup
-        allowEq = options.allowEq
         numCores = options.numCores
 
     import time
@@ -126,7 +119,7 @@ if __name__ == "__main__":
 
     start = time.time()
     tracemalloc.start()
-    res_text = init_algorithm(filePath, minSup, numCores, allowEq)
+    res_text = init_algorithm(filePath, minSup, numCores)
     snapshot = tracemalloc.take_snapshot()
     end = time.time()
 

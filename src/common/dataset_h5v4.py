@@ -28,7 +28,7 @@ from pathlib import Path
 
 class Dataset:
 
-    def __init__(self, file_path, min_sup=0.5, eq=False):
+    def __init__(self, file_path, min_sup=0.5):
         self.h5_file = str(Path(file_path).stem) + str('.h5')
         if os.path.exists(self.h5_file):
             print("Fetching data from h5 file")
@@ -44,7 +44,6 @@ class Dataset:
             self.invalid_bins = h5f['dataset/' + self.step_name + '/invalid_bins'][:]
             h5f.close()
             self.thd_supp = min_sup
-            self.equal = eq
             n = (self.attr_cols.size * 2) - self.invalid_bins.size
             if n > 0:
                 self.no_bins = False
@@ -52,7 +51,6 @@ class Dataset:
                 self.invalid_bins = True
         else:
             self.thd_supp = min_sup
-            self.equal = eq
             self.titles, self.data = Dataset.read_csv(file_path)
             self.row_count, self.col_count = self.data.shape
             self.time_cols = self.get_time_cols()
@@ -90,8 +88,13 @@ class Dataset:
             self.attr_size = self.row_count
         else:
             self.attr_size = len(attr_data[self.attr_cols[0]])
+        self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
 
-        # 2. Construct and store 1-item_set valid bins
+        # 2. Initialize h5 groups to store class attributes
+        self.init_h5_groups()
+        h5f = h5py.File(self.h5_file, 'r+')
+
+        # 3. Construct and store 1-item_set valid bins
         # execute binary rank to calculate support of pattern
         n = self.attr_size
         valid_count = 0
@@ -100,27 +103,27 @@ class Dataset:
             col_data = np.array(attr_data[col], dtype=float)
             incr = np.array((col, '+'), dtype='i, S1')
             decr = np.array((col, '-'), dtype='i, S1')
-            # temp_pos = Dataset.bin_rank(col_data, equal=self.equal)
 
-            # 2a. Generate 1-itemset gradual items
+            # 3a. Generate 1-itemset gradual items
             with np.errstate(invalid='ignore'):
-                if not self.equal:
-                    temp_pos = col_data < col_data[:, np.newaxis]
-                else:
-                    temp_pos = col_data <= col_data[:, np.newaxis]
-                    np.fill_diagonal(temp_pos, 0)
+                # temp_pos = col_data < col_data[:, np.newaxis]
+                grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
+                temp_pos = h5f.create_dataset(grp, data=col_data > col_data[:, np.newaxis], chunks=True)
 
-                # 2b. Check support of each generated itemset
-                supp = float(np.sum(temp_pos)) / float(n * (n - 1.0) / 2.0)
-                if supp < self.thd_supp:
-                    invalid_bins.append(incr)
-                    invalid_bins.append(decr)
-                else:
-                    grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_pos'
-                    self.add_h5_dataset(grp, temp_pos)
-                    grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
-                    self.add_h5_dataset(grp, temp_pos.T)
-                    valid_count += 1
+            # 3b. Check support of each generated itemset
+            bin_sum = 0
+            for s in temp_pos.iter_chunks():
+                bin_sum += np.sum(temp_pos[s])
+            supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+            if supp < self.thd_supp:
+                invalid_bins.append(incr)
+                invalid_bins.append(decr)
+                del h5f[grp]
+            else:
+                grp = 'dataset/' + self.step_name + '/valid_bins/' + str(col) + '_neg'
+                h5f.create_dataset(grp, data=col_data < col_data[:, np.newaxis], chunks=True)
+                valid_count += 1
+        h5f.close()
         self.invalid_bins = np.array(invalid_bins)
         grp = 'dataset/' + self.step_name + '/invalid_bins'
         self.add_h5_dataset(grp, self.invalid_bins)

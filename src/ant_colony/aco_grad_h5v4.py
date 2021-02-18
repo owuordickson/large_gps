@@ -14,18 +14,17 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 import numpy as np
 from itertools import combinations
 from common.gp_v4 import GI, GP
-from common.dataset_bfs_v4 import Dataset
+from common.dataset_h5v4 import Dataset
 
 
 class GradACO:
 
-    def __init__(self, f_path, min_supp, eq):
-        self.d_set = Dataset(f_path, min_supp, eq)
-        self.d_set.init_gp_attributes()
+    def __init__(self, f_path, min_supp):
+        self.d_set = Dataset(f_path, min_supp)
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
-        self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
+        #self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
 
     def generate_d(self):
         v_bins = self.d_set.valid_bins
@@ -48,6 +47,7 @@ class GradACO:
         return d, attr_keys
 
     def run_ant_colony(self):
+        pass
         min_supp = self.d_set.thd_supp
         d = self.d
         a = self.d_set.attr_size

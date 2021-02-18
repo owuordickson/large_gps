@@ -19,8 +19,8 @@ from common.dataset_bfs_v4 import Dataset
 
 class GradACO:
 
-    def __init__(self, f_path, min_supp, eq):
-        self.d_set = Dataset(f_path, min_supp, eq)
+    def __init__(self, f_path, min_supp):
+        self.d_set = Dataset(f_path, min_supp)
         self.d_set.init_gp_attributes()
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
