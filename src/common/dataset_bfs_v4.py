@@ -124,7 +124,7 @@ class Dataset:
                         values = np.array(raw_data[0], dtype='S')
                         titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
                         raw_data = np.delete(raw_data, 0, 0)
-                return titles, np.array(raw_data, dtype=float)
+                return titles, np.asarray(raw_data)
                 # return Dataset.get_tbl_headers(temp)
         except Exception as error:
             print("Unable to read CSV file")

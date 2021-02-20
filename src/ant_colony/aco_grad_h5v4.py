@@ -35,18 +35,7 @@ class GradACO:
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
         d = self.d_set.read_h5_dataset(grp_name)
         if d.size > 0:
-            # 1b. Fetch valid bins group
-            # grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
-            # h5f = h5py.File(self.d_set.h5_file, 'r')
-            # attr_keys = [x for x in list(h5f[grp_name].keys())]
-            # h5f.close()
-            return d  # , attr_keys
-
-        # 1b. Fetch valid bins group
-        # grp_name = 'dataset/' + self.d_set.step_name + '/valid_bins/'
-        # h5f = h5py.File(self.d_set.h5_file, 'r')
-        # grp = h5f[grp_name]
-        # attr_keys = [x for x in list(grp.keys())]
+            return d
 
         # 2. Initialize an empty d-matrix
         attr_keys = self.attr_keys
@@ -86,24 +75,12 @@ class GradACO:
                     d[j][i] += bin_sum
                 del h5f[grp1]
                 del h5f[grp2]
-        # for k in grp[attr_keys[0]].iter_chunks():
-            # 3. For each segment do a binary AND
-        #    for i in range(n):
-        #        for j in range(n):
-        #            bin_1 = grp[attr_keys[i]]
-        #            bin_2 = grp[attr_keys[j]]
-        #            if GI.parse_gi(attr_keys[i]).attribute_col == GI.parse_gi(attr_keys[j]).attribute_col:
-                        # Ignore similar attributes (+ or/and -)
-        #                continue
-        #            else:
-                        # Cumulative sum of all segments for 2x2 (all attributes) gradual items
-        #                d[i][j] += np.sum(np.multiply(bin_1[k], bin_2[k]))
 
         # 3. Save d_matrix in HDF5 file
         h5f.close()
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
         self.d_set.add_h5_dataset(grp_name, d)
-        return d  # , attr_keys
+        return d
 
     def run_ant_colony(self):
         pass

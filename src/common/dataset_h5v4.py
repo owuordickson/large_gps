@@ -145,7 +145,7 @@ class Dataset:
             h5f = h5py.File(self.h5_file, 'w')
             grp = h5f.require_group('dataset')
             grp.create_dataset('titles', data=self.titles)
-            grp.create_dataset('attr_data', data=self.attr_data, compression="gzip",
+            grp.create_dataset('attr_data', data=self.attr_data.astype('S'), compression="gzip",
                                compression_opts=9)
             grp.create_dataset('time_cols', data=self.time_cols)
             grp.create_dataset('attr_cols', data=self.attr_cols)
@@ -194,7 +194,7 @@ class Dataset:
                         values = np.array(raw_data[0], dtype='S')
                         titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
                         raw_data = np.delete(raw_data, 0, 0)
-                return titles, np.array(raw_data, dtype=float)
+                return titles, np.asarray(raw_data)
                 # return Dataset.get_tbl_headers(temp)
         except Exception as error:
             print("Unable to read CSV file")
