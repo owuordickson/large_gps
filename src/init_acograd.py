@@ -31,7 +31,7 @@ def init_algorithm(f_path, min_supp, cores):
             num_cores = Profile.get_num_cores()
 
         ac = GradACO(f_path, min_supp)
-        list_gp = []  # ac.run_ant_colony()
+        list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
         wr_line = "Algorithm: ACO-GRAANK (4.0)\n"
@@ -128,4 +128,4 @@ if __name__ == "__main__":
     wr_text += str(res_text)
     f_name = str('res_aco' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
-    # print(wr_text)
+    print(wr_text)

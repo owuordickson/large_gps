@@ -45,6 +45,7 @@ class GradACO:
                     bin_2 = v_bins[j][1]
                     # Cumulative sum of all segments for 2x2 (all attributes) gradual items
                     d[i][j] += np.sum(np.multiply(bin_1, bin_2))
+        # print(d)
         return d, attr_keys
 
     def run_ant_colony(self):

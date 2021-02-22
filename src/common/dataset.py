@@ -32,7 +32,7 @@ class Dataset:
         self.row_count, self.col_count = self.data.shape
         self.time_cols = self.get_time_cols()
         self.attr_cols = self.get_attr_cols()
-        self.valid_gis = []
+        self.valid_items = []
         self.rank_matrix = None
         self.no_bins = False
         self.step_name = ''  # For T-GRAANK
@@ -71,8 +71,8 @@ class Dataset:
         m = self.col_count
         r_combs = list(combinations(np.arange(n), 2))
         k = len(r_combs)  # r_combs.shape[0]
-        print(str(r_combs) + ' = ' + str(k))
-        rank_matrix = np.zeros((k, m), dtype=float)
+        # print(str(r_combs) + ' = ' + str(k))
+        self.rank_matrix = np.zeros((k, m), dtype=float)
 
         # 3. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
         valid_count = 0
@@ -86,22 +86,22 @@ class Dataset:
             for i in range(len(r_combs)):
                 r = r_combs[i]
                 if col_data[r[0]] > col_data[r[1]]:
-                    rank_matrix[i][col] = 1
+                    self.rank_matrix[i][col] = 1
                     bin_sum += 1
                 elif col_data[r[1]] > col_data[r[0]]:
-                    rank_matrix[i][col] = 0.5
+                    self.rank_matrix[i][col] = 0.5
                     bin_sum += 1
 
-            # 3b. Check support of each generated itemset
+            # 3b. Check support of each generated item-set
             supp = float(np.sum(bin_sum)) / float(n * (n - 1.0) / 2.0)
             if supp >= self.thd_supp:
-                self.valid_gis.append(incr)
-                self.valid_gis.append(decr)
+                self.valid_items.append(incr.as_string())
+                self.valid_items.append(decr.as_string())
                 valid_count += 2
 
-        print(rank_matrix)
-        # print(self.valid_gis)
-        print("***\n")
+        # print(self.rank_matrix)
+        # print(self.valid_items)
+        # print("***\n")
         if valid_count < 3:
             self.no_bins = True
         gc.collect()
