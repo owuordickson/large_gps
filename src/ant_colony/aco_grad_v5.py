@@ -56,7 +56,6 @@ class GradACO:
 
                     # Cumulative sum of all segments for 2x2 (all attributes) gradual items
                     temp_bin = np.where(bin_1 == bin_2, 1, 0)
-                    # temp_bin[temp_bin == 0.5] = 1
                     d[i][j] += np.sum(temp_bin)
         # print(d)
         return d, attr_keys

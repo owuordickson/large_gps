@@ -71,7 +71,6 @@ class Dataset:
         m = self.col_count
         r_combs = list(combinations(np.arange(n), 2))
         k = len(r_combs)  # r_combs.shape[0]
-        # print(str(r_combs) + ' = ' + str(k))
         self.rank_matrix = np.zeros((k, m), dtype=float)
 
         # 3. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
@@ -104,6 +103,8 @@ class Dataset:
         # print("***\n")
         if valid_count < 3:
             self.no_bins = True
+        del self.data
+        del attr_data
         gc.collect()
 
     @staticmethod
