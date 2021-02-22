@@ -10,7 +10,7 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 Usage:
-    $python init_acograd.py -f ../data/DATASET.csv -s 0.5
+    $python init_acograd_v5.py -f ../data/DATASET.csv -s 0.5
 
 Description:
     f -> file path (CSV)
@@ -20,7 +20,7 @@ Description:
 
 import sys
 from optparse import OptionParser
-from ant_colony.aco_grad import GradACO
+from ant_colony.aco_grad_v5 import GradACO
 
 
 def init_algorithm(f_path, min_supp, cores):
@@ -34,7 +34,7 @@ def init_algorithm(f_path, min_supp, cores):
         list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
-        wr_line = "Algorithm: ACO-GRAANK (4.0)\n"
+        wr_line = "Algorithm: ACO-GRAANK (5.0)\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
         wr_line += "No. of (dataset) tuples: " + str(ac.d_set.row_count) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
@@ -83,14 +83,14 @@ if __name__ == "__main__":
                              dest='file',
                              help='path to file containing csv',
                              # default=None,
-                             default='../data/DATASET.csv',
+                             # default='../data/DATASET.csv',
                              # default='../data/DATASET2.csv',
                              # default='../data/DATASET3.csv',
                              # default='../data/Omnidir.csv',
                              # default='../data/FluTopicData-testsansdate-blank.csv',
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
-                             # default='../data/c2k_02k.csv',
+                             default='../data/c2k_02k.csv',
                              # default='../data/Directio_site15k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         (options, args) = optparser.parse_args()
 
         if options.file is None:
-            print("Usage: $python init_acograd.py -f filename.csv ")
+            print("Usage: $python init_acograd_v5.py -f filename.csv ")
             sys.exit('System will exit')
         else:
             filePath = options.file

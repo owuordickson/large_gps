@@ -8,7 +8,7 @@
 @created: "06 July 2020"
 Breath-First Search for gradual patterns (ACO-GRAANK)
 Usage:
-    $python init_acograd.py -f ../data/DATASET.csv -s 0.5
+    $python init_acograd_v5.py -f ../data/DATASET.csv -s 0.5
 Description:
     f -> file path (CSV)
     s -> minimum support
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         (options, args) = optparser.parse_args()
 
         if options.file is None:
-            print("Usage: $python init_acograd.py -f filename.csv ")
+            print("Usage: $python init_acograd_v5.py -f filename.csv ")
             sys.exit('System will exit')
         else:
             filePath = options.file
