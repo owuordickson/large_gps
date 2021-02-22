@@ -11,6 +11,7 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
+import h5py
 import numpy as np
 from itertools import combinations
 from common.gp_v4 import GI, GP
@@ -21,17 +22,28 @@ class GradACO:
 
     def __init__(self, f_path, min_supp):
         self.d_set = Dataset(f_path, min_supp)
-        self.d_set.init_gp_attributes()
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
         self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
 
     def generate_d(self):
-        # v_items = self.d_set.valid_items
+        # 1a. Retrieve/Generate distance matrix (d)
+        grp_name = 'dataset/' + self.d_set.step_name + '/valid_items/'
+        attr_keys = [x.decode() for x in self.d_set.read_h5_dataset(grp_name)]
+
+        grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
+        d = self.d_set.read_h5_dataset(grp_name)
+        if d.size > 0:
+            # 1b. Fetch valid bins group
+            return d, attr_keys
+
+        # 1b. Fetch valid bins group
+        ranks = self.d_set.read_h5_dataset('dataset/' + self.d_set.step_name + '/rank_matrix/')
+
         # 1. Fetch valid bins group
-        attr_keys = self.d_set.valid_items  # [GI(x[0], x[1].decode()).as_string() for x in v_items[:, 0]]
-        ranks = self.d_set.rank_matrix
+        # attr_keys = self.d_set.valid_items
+        # ranks = self.d_set.rank_matrix
 
         # 2. Initialize an empty d-matrix
         n = len(attr_keys)
@@ -58,6 +70,8 @@ class GradACO:
                     temp_bin = np.where(bin_1 == bin_2, 1, 0)
                     d[i][j] += np.sum(temp_bin)
         # print(d)
+        grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
+        self.d_set.add_h5_dataset(grp_name, d)
         return d, attr_keys
 
     def run_ant_colony(self):
@@ -159,7 +173,7 @@ class GradACO:
         min_supp = self.d_set.thd_supp
         n = self.d_set.attr_size
         gen_pattern = GP()
-        ranks = self.d_set.rank_matrix
+        ranks = self.d_set.read_h5_dataset('dataset/' + self.d_set.step_name + '/rank_matrix/')
 
         main_bin = ranks[:, pattern.gradual_items[0].attribute_col].copy()
         for i in range(len(pattern.gradual_items)):

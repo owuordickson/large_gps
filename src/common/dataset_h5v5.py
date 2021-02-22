@@ -15,29 +15,53 @@ Changes
 
 """
 import csv
+import h5py
 from dateutil.parser import parse
 from itertools import combinations
 import time
 import numpy as np
 import gc
+import os
+from pathlib import Path
 from common.gp_v4 import GI
 
 
 class Dataset:
 
     def __init__(self, file_path, min_sup=0.5, eq=False):
-        self.thd_supp = min_sup
-        self.equal = eq
-        self.titles, self.data = Dataset.read_csv(file_path)
-        self.row_count, self.col_count = self.data.shape
-        self.time_cols = self.get_time_cols()
-        self.attr_cols = self.get_attr_cols()
-        self.valid_items = []
-        self.rank_matrix = None
-        self.no_bins = False
-        self.step_name = ''  # For T-GRAANK
-        self.attr_size = 0  # For T-GRAANK
-        # self.init_attributes()
+        self.h5_file = str(Path(file_path).stem) + str('.h5')
+        if os.path.exists(self.h5_file):
+            print("Fetching data from h5 file")
+            h5f = h5py.File(self.h5_file, 'r')
+            self.titles = h5f['dataset/titles'][:]
+            self.time_cols = h5f['dataset/time_cols'][:]
+            self.attr_cols = h5f['dataset/attr_cols'][:]
+            size = h5f['dataset/size_arr'][:]
+            self.col_count = size[0]
+            self.row_count = size[1]
+            self.attr_size = size[2]
+            valid_count = size[3]
+            self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
+            h5f.close()
+            self.thd_supp = min_sup
+            if valid_count < 3:
+                self.no_bins = True
+            else:
+                self.no_bins = False
+            # self.valid_items = []
+        else:
+            self.thd_supp = min_sup
+            self.equal = eq
+            self.titles, self.data = Dataset.read_csv(file_path)
+            self.row_count, self.col_count = self.data.shape
+            self.time_cols = self.get_time_cols()
+            self.attr_cols = self.get_attr_cols()
+            # self.valid_items = []
+            # self.rank_matrix = None
+            self.no_bins = False
+            self.step_name = ''  # For T-GRAANK
+            self.attr_size = 0  # For T-GRAANK
+            self.init_gp_attributes()
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)
@@ -65,47 +89,87 @@ class Dataset:
             self.attr_size = self.row_count
         else:
             self.attr_size = len(attr_data[self.attr_cols[0]])
+        self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
 
-        # 2. Initialize (k x attr) matrix
+        # 2. Initialize h5 groups to store class attributes
+        self.init_h5_groups()
+        h5f = h5py.File(self.h5_file, 'r+')
+
+        # 3. Initialize (k x attr) matrix
         n = self.attr_size
         m = self.col_count
         r_combs = list(combinations(np.arange(n), 2))
         k = len(r_combs)  # r_combs.shape[0]
-        self.rank_matrix = np.zeros((k, m), dtype=float)
+        # ranks = np.zeros((k, m), dtype=float)
 
-        # 3. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
+        grp_name = 'dataset/' + self.step_name + '/rank_matrix'
+        rank_matrix = h5f.create_dataset(grp_name, data=np.zeros((k, m), dtype=float))
+
+        # 4. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
         valid_count = 0
+        valid_items = []
         for col in self.attr_cols:
             col_data = np.array(attr_data[col], dtype=float)
             incr = GI(col, '+')  # np.array((col, '+'), dtype='i, S1')
             decr = GI(col, '-')  # np.array((col, '-'), dtype='i, S1')
 
-            # 3a. Determine gradual ranks
+            # 4a. Determine gradual ranks
             bin_sum = 0
             for i in range(len(r_combs)):
                 r = r_combs[i]
                 if col_data[r[0]] > col_data[r[1]]:
-                    self.rank_matrix[i][col] = 1
+                    rank_matrix[i, col] = 1
                     bin_sum += 1
                 elif col_data[r[1]] > col_data[r[0]]:
-                    self.rank_matrix[i][col] = 0.5
+                    rank_matrix[i, col] = 0.5
                     bin_sum += 1
 
-            # 3b. Check support of each generated item-set
+            # 4b. Check support of each generated item-set
             supp = float(np.sum(bin_sum)) / float(n * (n - 1.0) / 2.0)
             if supp >= self.thd_supp:
-                self.valid_items.append(incr.as_string())
-                self.valid_items.append(decr.as_string())
+                valid_items.append(incr.as_string())
+                valid_items.append(decr.as_string())
                 valid_count += 2
 
-        # print(self.rank_matrix)
-        # print(self.valid_items)
-        # print("***\n")
+        h5f.close()
+        grp_name = 'dataset/' + self.step_name + '/valid_items'
+        self.add_h5_dataset(grp_name, np.array(valid_items).astype('S'))
+        data_size = np.array([self.col_count, self.row_count, self.attr_size, valid_count])
+        self.add_h5_dataset('dataset/size_arr', data_size)
         if valid_count < 3:
             self.no_bins = True
         del self.data
         del attr_data
+        del valid_items
         gc.collect()
+
+    def init_h5_groups(self):
+        if os.path.exists(self.h5_file):
+            pass
+        else:
+            h5f = h5py.File(self.h5_file, 'w')
+            grp = h5f.require_group('dataset')
+            grp.create_dataset('titles', data=self.titles)
+            # grp.create_dataset('attr_data', data=self.attr_data.astype('S'), compression="gzip",
+            #                   compression_opts=9)
+            grp.create_dataset('time_cols', data=self.time_cols)
+            grp.create_dataset('attr_cols', data=self.attr_cols)
+            h5f.close()
+
+    def read_h5_dataset(self, group):
+        temp = np.array([])
+        h5f = h5py.File(self.h5_file, 'r')
+        if group in h5f:
+            temp = h5f[group][:]
+        h5f.close()
+        return temp
+
+    def add_h5_dataset(self, group, data):
+        h5f = h5py.File(self.h5_file, 'r+')
+        if group in h5f:
+            del h5f[group]
+        h5f.create_dataset(group, data=data, compression="gzip", compression_opts=9)
+        h5f.close()
 
     @staticmethod
     def read_csv(file):
