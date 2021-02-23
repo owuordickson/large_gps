@@ -12,9 +12,8 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
 import numpy as np
-from itertools import combinations
 from common.gp_v4 import GI, GP
-from common.dataset_bfs_v4 import Dataset
+from common.dataset_v4 import Dataset
 
 
 class GradACO:
@@ -137,10 +136,12 @@ class GradACO:
 
     def update_pheromones(self, pattern, p_matrix):
         idx = [self.attr_keys.index(x.as_string()) for x in pattern.gradual_items]
-        combs = list(combinations(idx, 2))
-        for i, j in combs:
-            p_matrix[i][j] += 1
-            p_matrix[j][i] += 1
+        for n in range(len(idx)):
+            for m in range(n + 1, len(idx)):
+                i = idx[n]
+                j = idx[m]
+                p_matrix[i][j] += 1
+                p_matrix[j][i] += 1
         return p_matrix
 
     def validate_gp(self, pattern):

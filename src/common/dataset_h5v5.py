@@ -103,8 +103,8 @@ class Dataset:
         k = int(n * (n - 1) / 2)
 
         grp_name = 'dataset/' + self.step_name + '/rank_matrix'
-        rank_matrix = h5f.create_dataset(grp_name, data=np.zeros((k, m), dtype=np.half), compression="gzip",
-                                         compression_opts=9)
+        rank_matrix = h5f.create_dataset(grp_name, data=np.zeros((k, m), dtype=np.float16), chunks=True,
+                                         compression="gzip", compression_opts=9)
         # rank_matrix = np.memmap(self.np_file, dtype=float, mode='w+', shape=(k, m))
 
         # 4. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern

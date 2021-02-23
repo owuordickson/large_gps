@@ -3,9 +3,9 @@
 @author: "Dickson Owuor"
 @credits: "Anne Laurent,"
 @license: "MIT"
-@version: "5.4"
+@version: "3.0"
 @email: "owuordickson@gmail.com"
-@created: "17 February 2021"
+@created: "05 February 2021"
 
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
@@ -22,25 +22,25 @@ Description:
 import sys
 from optparse import OptionParser
 # from common.profile_mem import Profile
-from ant_colony.aco_grad_h5v4 import GradACO
+from tests.aco_grad_h5v3 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores):
+def init_algorithm(f_path, min_supp, cores, seg_size=10):
     try:
         if cores > 1:
             num_cores = cores
         else:
             num_cores = Profile.get_num_cores()
 
-        ac = GradACO(f_path, min_supp)
+        ac = GradACO(f_path, min_supp, seg_size)
         list_gp = ac.run_ant_colony()
 
-        wr_line = "Algorithm: ACO-GRAANK HF5 (v4.0)\n"
+        wr_line = "Algorithm: ACO-GRAANK HF5 (v3.0)\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
         wr_line += "No. of (dataset) tuples: " + str(ac.d_set.row_count) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
-        # wr_line += "Segment size: " + str(seg_size) + '\n'
-        # wr_line += "Total number of segments: " + str(ac.d_set.seg_count) + '\n'
+        wr_line += "Segment size: " + str(seg_size) + '\n'
+        wr_line += "Total number of segments: " + str(ac.d_set.seg_count) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
         wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
         wr_line += "Number of iterations: " + str(ac.iteration_count) + '\n\n'
@@ -91,8 +91,8 @@ if __name__ == "__main__":
                              # default='../data/FluTopicData-testsansdate-blank.csv',
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
-                             # default='../data/c2k_02k.csv',
-                             default='../data/Directio_site15k.csv',
+                             default='../data/c2k_02k.csv',
+                             # default='../data/Directio_site15k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
                              dest='minSup',

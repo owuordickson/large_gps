@@ -14,7 +14,7 @@ import h5py
 import numpy as np
 from itertools import combinations
 from common.gp_v4 import GI, GP
-from common.dataset_h5v3 import Dataset
+from tests.dataset_h5v3 import Dataset
 
 
 class GradACO:

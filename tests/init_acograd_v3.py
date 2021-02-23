@@ -17,7 +17,7 @@ Description:
 import sys
 from optparse import OptionParser
 # from common.profile_mem import Profile
-from ant_colony.aco_grad_v3 import GradACO
+from tests.aco_grad_v3 import GradACO
 
 
 def init_algorithm(f_path, min_supp, cores, eq=False):
