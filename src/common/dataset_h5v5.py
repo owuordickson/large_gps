@@ -148,7 +148,7 @@ class Dataset:
         grp_name = 'dataset/' + self.step_name + '/valid_items'
         self.add_h5_dataset(grp_name, np.array(valid_items).astype('S'))
         data_size = np.array([self.col_count, self.row_count, self.attr_size, valid_count])
-        self.add_h5_dataset('dataset/size_arr', data_size)
+        self.add_h5_dataset('dataset/size_arr', data_size.astype('i8'))
         if valid_count < 3:
             self.no_bins = True
         # rank_matrix.flush()
@@ -166,8 +166,8 @@ class Dataset:
             grp.create_dataset('titles', data=self.titles)
             # grp.create_dataset('attr_data', data=self.attr_data.astype('S'), compression="gzip",
             #                   compression_opts=9)
-            grp.create_dataset('time_cols', data=self.time_cols)
-            grp.create_dataset('attr_cols', data=self.attr_cols)
+            grp.create_dataset('time_cols', data=self.time_cols.astype('u1'))
+            grp.create_dataset('attr_cols', data=self.attr_cols.astype('u1'))
             h5f.close()
 
     def read_h5_dataset(self, group):

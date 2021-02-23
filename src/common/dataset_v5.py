@@ -69,7 +69,7 @@ class Dataset:
         n = self.attr_size
         m = self.col_count
         k = int(n * (n - 1) / 2)
-        self.rank_matrix = np.zeros((k, m), dtype=float)
+        self.rank_matrix = np.zeros((k, m), dtype=np.float16)
 
         # 3. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
         valid_count = 0
