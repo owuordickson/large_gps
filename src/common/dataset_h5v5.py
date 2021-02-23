@@ -148,7 +148,7 @@ class Dataset:
         grp_name = 'dataset/' + self.step_name + '/valid_items'
         self.add_h5_dataset(grp_name, np.array(valid_items).astype('S'))
         data_size = np.array([self.col_count, self.row_count, self.attr_size, valid_count])
-        self.add_h5_dataset('dataset/size_arr', data_size.astype('i8'))
+        self.add_h5_dataset('dataset/size_arr', data_size)
         if valid_count < 3:
             self.no_bins = True
         # rank_matrix.flush()
@@ -178,11 +178,14 @@ class Dataset:
         h5f.close()
         return temp
 
-    def add_h5_dataset(self, group, data):
+    def add_h5_dataset(self, group, data, compress=False):
         h5f = h5py.File(self.h5_file, 'r+')
         if group in h5f:
             del h5f[group]
-        h5f.create_dataset(group, data=data, compression="gzip", compression_opts=9)
+        if compress:
+            h5f.create_dataset(group, data=data, chunks=True, compression="gzip", compression_opts=9)
+        else:
+            h5f.create_dataset(group, data=data)
         h5f.close()
 
     @staticmethod

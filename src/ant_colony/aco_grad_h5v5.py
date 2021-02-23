@@ -11,7 +11,6 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
-import h5py
 import numpy as np
 from common.gp_v4 import GI, GP
 from common.dataset_h5v5 import Dataset
@@ -74,7 +73,7 @@ class GradACO:
                     d[i][j] += np.sum(temp_bin)
         # print(d)
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
-        self.d_set.add_h5_dataset(grp_name, d.astype('i8'))
+        self.d_set.add_h5_dataset(grp_name, d, compress=True)
         return d, attr_keys
 
     def run_ant_colony(self):
