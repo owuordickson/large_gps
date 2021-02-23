@@ -98,12 +98,10 @@ class Dataset:
         # 3. Initialize (k x attr) matrix
         n = self.attr_size
         m = self.col_count
-        # r_combs = list(combinations(np.arange(n), 2))
-        # k = len(r_combs)
         k = int(n * (n - 1) / 2)
 
         grp_name = 'dataset/' + self.step_name + '/rank_matrix'
-        rank_matrix = h5f.create_dataset(grp_name, data=np.zeros((k, m), dtype=np.float16), chunks=True,
+        rank_matrix = h5f.create_dataset(grp_name, data=np.zeros((k, m), dtype=np.float16), chunks=True, shuffle=True,
                                          compression="gzip", compression_opts=9)
         # rank_matrix = np.memmap(self.np_file, dtype=float, mode='w+', shape=(k, m))
 
@@ -112,8 +110,8 @@ class Dataset:
         valid_items = []
         for col in self.attr_cols:
             col_data = np.array(attr_data[col], dtype=float)
-            incr = GI(col, '+')  # np.array((col, '+'), dtype='i, S1')
-            decr = GI(col, '-')  # np.array((col, '-'), dtype='i, S1')
+            incr = GI(col, '+')
+            decr = GI(col, '-')
 
             # 4a. Determine gradual ranks
             bin_sum = 0
@@ -183,7 +181,7 @@ class Dataset:
         if group in h5f:
             del h5f[group]
         if compress:
-            h5f.create_dataset(group, data=data, chunks=True, compression="gzip", compression_opts=9)
+            h5f.create_dataset(group, data=data, chunks=True, shuffle=True, compression="gzip", compression_opts=9)
         else:
             h5f.create_dataset(group, data=data)
         h5f.close()
