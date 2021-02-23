@@ -17,7 +17,6 @@ Changes
 import csv
 import h5py
 from dateutil.parser import parse
-from itertools import combinations
 import time
 import numpy as np
 import gc
@@ -29,6 +28,7 @@ from common.gp_v4 import GI
 class Dataset:
 
     def __init__(self, file_path, min_sup=0.5, eq=False):
+        self.np_file = str(Path(file_path).stem) + str('.dat')
         self.h5_file = str(Path(file_path).stem) + str('.h5')
         if os.path.exists(self.h5_file):
             print("Fetching data from h5 file")
@@ -98,12 +98,14 @@ class Dataset:
         # 3. Initialize (k x attr) matrix
         n = self.attr_size
         m = self.col_count
-        r_combs = list(combinations(np.arange(n), 2))
-        k = len(r_combs)  # r_combs.shape[0]
-        # ranks = np.zeros((k, m), dtype=float)
+        # r_combs = list(combinations(np.arange(n), 2))
+        # k = len(r_combs)
+        k = int(n * (n - 1) / 2)
 
         grp_name = 'dataset/' + self.step_name + '/rank_matrix'
-        rank_matrix = h5f.create_dataset(grp_name, data=np.zeros((k, m), dtype=float))
+        rank_matrix = h5f.create_dataset(grp_name, data=np.zeros((k, m), dtype=np.half), compression="gzip",
+                                         compression_opts=9)
+        # rank_matrix = np.memmap(self.np_file, dtype=float, mode='w+', shape=(k, m))
 
         # 4. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
         valid_count = 0
@@ -115,14 +117,25 @@ class Dataset:
 
             # 4a. Determine gradual ranks
             bin_sum = 0
-            for i in range(len(r_combs)):
-                r = r_combs[i]
-                if col_data[r[0]] > col_data[r[1]]:
-                    rank_matrix[i, col] = 1
-                    bin_sum += 1
-                elif col_data[r[1]] > col_data[r[0]]:
-                    rank_matrix[i, col] = 0.5
-                    bin_sum += 1
+            row = 0
+            for i in range(n):
+                for j in range(i+1, n):
+                    if col_data[i] > col_data[j]:
+                        rank_matrix[row, col] = 1
+                        bin_sum += 1
+                    elif col_data[j] > col_data[i]:
+                        rank_matrix[row, col] = 0.5
+                        bin_sum += 1
+                    row += 1
+
+            # for i in range(len(r_combs)):
+            #    r = r_combs[i]
+            #    if col_data[r[0]] > col_data[r[1]]:
+            #        rank_matrix[i, col] = 1
+            #        bin_sum += 1
+            #    elif col_data[r[1]] > col_data[r[0]]:
+            #        rank_matrix[i, col] = 0.5
+            #        bin_sum += 1
 
             # 4b. Check support of each generated item-set
             supp = float(np.sum(bin_sum)) / float(n * (n - 1.0) / 2.0)
@@ -138,6 +151,7 @@ class Dataset:
         self.add_h5_dataset('dataset/size_arr', data_size)
         if valid_count < 3:
             self.no_bins = True
+        # rank_matrix.flush()
         del self.data
         del attr_data
         del valid_items

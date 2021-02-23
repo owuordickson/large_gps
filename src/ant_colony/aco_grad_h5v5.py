@@ -13,7 +13,6 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 """
 import h5py
 import numpy as np
-from itertools import combinations
 from common.gp_v4 import GI, GP
 from common.dataset_h5v5 import Dataset
 
@@ -40,6 +39,10 @@ class GradACO:
 
         # 1b. Fetch valid bins group
         ranks = self.d_set.read_h5_dataset('dataset/' + self.d_set.step_name + '/rank_matrix/')
+        # m = self.d_set.col_count
+        # n = self.d_set.attr_size
+        # k = int(n * (n - 1) / 2)
+        # ranks = np.memmap(self.d_set.np_file, dtype=float, mode='r', shape=(k, m))
 
         # 1. Fetch valid bins group
         # attr_keys = self.d_set.valid_items
@@ -163,10 +166,13 @@ class GradACO:
 
     def update_pheromones(self, pattern, p_matrix):
         idx = [self.attr_keys.index(x.as_string()) for x in pattern.gradual_items]
-        combs = list(combinations(idx, 2))
-        for i, j in combs:
-            p_matrix[i][j] += 1
-            p_matrix[j][i] += 1
+        # combs = list(combinations(idx, 2))
+        for n in range(len(idx)):
+            for m in range(n+1, len(idx)):
+                i = idx[n]
+                j = idx[m]
+                p_matrix[i][j] += 1
+                p_matrix[j][i] += 1
         return p_matrix
 
     def validate_gp(self, pattern):
@@ -174,6 +180,10 @@ class GradACO:
         n = self.d_set.attr_size
         gen_pattern = GP()
         ranks = self.d_set.read_h5_dataset('dataset/' + self.d_set.step_name + '/rank_matrix/')
+        # m = self.d_set.col_count
+        # n = self.d_set.attr_size
+        # k = int(n * (n - 1) / 2)
+        # ranks = np.memmap(self.d_set.np_file, dtype=float, mode='r', shape=(k, m))
 
         main_bin = ranks[:, pattern.gradual_items[0].attribute_col].copy()
         for i in range(len(pattern.gradual_items)):
