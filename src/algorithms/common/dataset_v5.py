@@ -19,7 +19,7 @@ from dateutil.parser import parse
 import time
 import numpy as np
 import gc
-from common.gp_v4 import GI
+from algorithms.common.gp_v4 import GI
 
 
 class Dataset:

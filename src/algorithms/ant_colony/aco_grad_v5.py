@@ -3,7 +3,7 @@
 @author: "Dickson Owuor"
 @credits: "Anne Laurent,"
 @license: "MIT"
-@version: "5.5"
+@version: "5.0"
 @email: "owuordickson@gmail.com"
 @created: "22 Feb 2021"
 @modified: "22 Feb 2021"
@@ -12,40 +12,29 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
 import numpy as np
-import zarr
-
-from common.gp_v4 import GI, GP
-from common.dataset_z5v5 import Dataset
+from algorithms.common.gp_v4 import GI, GP
+from algorithms.common.dataset_v5 import Dataset
 
 
 class GradACO:
 
     def __init__(self, f_path, min_supp):
         self.d_set = Dataset(f_path, min_supp)
+        self.d_set.init_gp_attributes()
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
         self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
 
     def generate_d(self):
-        # 1a. Retrieve/Generate distance matrix (d)
-        grp_name = 'dataset/' + self.d_set.step_name + '/valid_items'
-        attr_keys = [x.decode() for x in self.d_set.read_zarr_dataset(grp_name)]
-
-        grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
-        d = self.d_set.read_zarr_dataset(grp_name)
-        if d.size > 0:
-            # 1b. Fetch valid bins group
-            return d, attr_keys
-
-        # 1b. Fetch valid bins group
-        z_root = zarr.open(self.d_set.z_file, 'r')
-        grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix'
-        ranks = z_root[grp_name][:]  # [:] TO BE REMOVED
+        # v_items = self.d_set.valid_items
+        # 1. Fetch valid bins group
+        attr_keys = self.d_set.valid_items  # [GI(x[0], x[1].decode()).as_string() for x in v_items[:, 0]]
+        ranks = self.d_set.rank_matrix
 
         # 2. Initialize an empty d-matrix
         n = len(attr_keys)
-        d = np.zeros((n, n), dtype=np.dtype('i8'))  # cumulative sum of all segments
+        d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
         for i in range(n):
             for j in range(n):
                 gi_1 = GI.parse_gi(attr_keys[i])
@@ -54,7 +43,6 @@ class GradACO:
                     # Ignore similar attributes (+ or/and -)
                     continue
                 else:
-                    # for s in ranks.iter_chunks():
                     bin_1 = ranks[:, gi_1.attribute_col].copy()
                     bin_2 = ranks[:, gi_2.attribute_col].copy()
 
@@ -69,8 +57,6 @@ class GradACO:
                     temp_bin = np.where(bin_1 == bin_2, 1, 0)
                     d[i][j] += np.sum(temp_bin)
         # print(d)
-        grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
-        self.d_set.add_zarr_dataset(grp_name, d, compress=True)
         return d, attr_keys
 
     def run_ant_colony(self):
@@ -162,9 +148,8 @@ class GradACO:
 
     def update_pheromones(self, pattern, p_matrix):
         idx = [self.attr_keys.index(x.as_string()) for x in pattern.gradual_items]
-        # combs = list(combinations(idx, 2))
         for n in range(len(idx)):
-            for m in range(n+1, len(idx)):
+            for m in range(n + 1, len(idx)):
                 i = idx[n]
                 j = idx[m]
                 p_matrix[i][j] += 1
@@ -175,12 +160,9 @@ class GradACO:
         min_supp = self.d_set.thd_supp
         n = self.d_set.attr_size
         gen_pattern = GP()
+        ranks = self.d_set.rank_matrix
 
-        z_root = zarr.open(self.d_set.z_file, 'r')
-        grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix'
-        ranks = z_root[grp_name][:]  # [:] TO BE REMOVED
-
-        main_bin = ranks[:, pattern.gradual_items[0].attribute_col]
+        main_bin = ranks[:, pattern.gradual_items[0].attribute_col].copy()
         for i in range(len(pattern.gradual_items)):
             gi = pattern.gradual_items[i]
             if i == 0:

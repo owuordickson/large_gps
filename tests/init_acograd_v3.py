@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
     import time
     import tracemalloc
-    from common.profile_mem import Profile
+    from algorithms.common.profile_mem import Profile
 
     start = time.time()
     tracemalloc.start()

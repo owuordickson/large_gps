@@ -23,7 +23,7 @@ import numpy as np
 import gc
 import os
 from pathlib import Path
-from common.gp_v4 import GI
+from algorithms.common.gp_v4 import GI
 
 
 class Dataset:
@@ -166,7 +166,7 @@ class Dataset:
         del self.data
         del attr_data
         del valid_items
-        print(rank_matrix[:])
+        # print(rank_matrix[:])
         gc.collect()
 
     def init_zarr_groups(self):

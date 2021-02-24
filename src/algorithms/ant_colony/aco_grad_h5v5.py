@@ -13,8 +13,8 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 """
 import h5py
 import numpy as np
-from common.gp_v4 import GI, GP
-from common.dataset_h5v5 import Dataset
+from algorithms.common.gp_v4 import GI, GP
+from algorithms.common.dataset_h5v5 import Dataset
 
 
 class GradACO:
