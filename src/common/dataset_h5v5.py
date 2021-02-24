@@ -99,10 +99,14 @@ class Dataset:
         n = self.attr_size
         m = self.col_count
         k = int(n * (n - 1) / 2)
+        if k > 10000:
+            ch = 10000
+        else:
+            ch = k
 
         grp_name = 'dataset/' + self.step_name + '/rank_matrix'
-        rank_matrix = h5f.create_dataset(grp_name, data=np.zeros((k, m), dtype=np.float16), chunks=True, shuffle=True,
-                                         compression="gzip", compression_opts=9)
+        rank_matrix = h5f.create_dataset(grp_name, (k, m), chunks=(ch, m),
+                                         compression="gzip", compression_opts=9, shuffle=True)  # )
         # rank_matrix = np.memmap(self.np_file, dtype=float, mode='w+', shape=(k, m))
 
         # 4. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
@@ -125,15 +129,6 @@ class Dataset:
                         rank_matrix[row, col] = 0.5
                         bin_sum += 1
                     row += 1
-
-            # for i in range(len(r_combs)):
-            #    r = r_combs[i]
-            #    if col_data[r[0]] > col_data[r[1]]:
-            #        rank_matrix[i, col] = 1
-            #        bin_sum += 1
-            #    elif col_data[r[1]] > col_data[r[0]]:
-            #        rank_matrix[i, col] = 0.5
-            #        bin_sum += 1
 
             # 4b. Check support of each generated item-set
             supp = float(np.sum(bin_sum)) / float(n * (n - 1.0) / 2.0)
@@ -181,7 +176,7 @@ class Dataset:
         if group in h5f:
             del h5f[group]
         if compress:
-            h5f.create_dataset(group, data=data, chunks=True, shuffle=True, compression="gzip", compression_opts=9)
+            h5f.create_dataset(group, data=data, chunks=True, compression="gzip", compression_opts=9, shuffle=True)
         else:
             h5f.create_dataset(group, data=data)
         h5f.close()

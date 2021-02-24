@@ -11,6 +11,7 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
+import h5py
 import numpy as np
 from common.gp_v4 import GI, GP
 from common.dataset_h5v5 import Dataset
@@ -37,7 +38,9 @@ class GradACO:
             return d, attr_keys
 
         # 1b. Fetch valid bins group
-        ranks = self.d_set.read_h5_dataset('dataset/' + self.d_set.step_name + '/rank_matrix/')
+        h5f = h5py.File(self.d_set.h5_file, 'r')
+        grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix/'
+        ranks = h5f[grp_name]
         # m = self.d_set.col_count
         # n = self.d_set.attr_size
         # k = int(n * (n - 1) / 2)
@@ -58,6 +61,7 @@ class GradACO:
                     # Ignore similar attributes (+ or/and -)
                     continue
                 else:
+                    # for s in ranks.iter_chunks():
                     bin_1 = ranks[:, gi_1.attribute_col].copy()
                     bin_2 = ranks[:, gi_2.attribute_col].copy()
 
@@ -72,6 +76,7 @@ class GradACO:
                     temp_bin = np.where(bin_1 == bin_2, 1, 0)
                     d[i][j] += np.sum(temp_bin)
         # print(d)
+        h5f.close()
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
         self.d_set.add_h5_dataset(grp_name, d, compress=True)
         return d, attr_keys
@@ -178,13 +183,16 @@ class GradACO:
         min_supp = self.d_set.thd_supp
         n = self.d_set.attr_size
         gen_pattern = GP()
-        ranks = self.d_set.read_h5_dataset('dataset/' + self.d_set.step_name + '/rank_matrix/')
+
+        h5f = h5py.File(self.d_set.h5_file, 'r')
+        grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix/'
+        ranks = h5f[grp_name]
         # m = self.d_set.col_count
         # n = self.d_set.attr_size
         # k = int(n * (n - 1) / 2)
         # ranks = np.memmap(self.d_set.np_file, dtype=float, mode='r', shape=(k, m))
 
-        main_bin = ranks[:, pattern.gradual_items[0].attribute_col].copy()
+        main_bin = ranks[:, pattern.gradual_items[0].attribute_col]
         for i in range(len(pattern.gradual_items)):
             gi = pattern.gradual_items[i]
             if i == 0:
@@ -206,6 +214,7 @@ class GradACO:
                     gen_pattern.add_gradual_item(gi)
                     gen_pattern.set_support(supp)
 
+        h5f.close()
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
         else:
