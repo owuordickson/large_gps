@@ -41,14 +41,6 @@ class GradACO:
         h5f = h5py.File(self.d_set.h5_file, 'r')
         grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix'
         ranks = h5f[grp_name][:]  # [:] TO BE REMOVED
-        # m = self.d_set.col_count
-        # n = self.d_set.attr_size
-        # k = int(n * (n - 1) / 2)
-        # ranks = np.memmap(self.d_set.np_file, dtype=float, mode='r', shape=(k, m))
-
-        # 1. Fetch valid bins group
-        # attr_keys = self.d_set.valid_items
-        # ranks = self.d_set.rank_matrix
 
         # 2. Initialize an empty d-matrix
         n = len(attr_keys)
