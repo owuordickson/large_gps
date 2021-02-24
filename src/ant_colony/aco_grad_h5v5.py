@@ -28,7 +28,7 @@ class GradACO:
 
     def generate_d(self):
         # 1a. Retrieve/Generate distance matrix (d)
-        grp_name = 'dataset/' + self.d_set.step_name + '/valid_items/'
+        grp_name = 'dataset/' + self.d_set.step_name + '/valid_items'
         attr_keys = [x.decode() for x in self.d_set.read_h5_dataset(grp_name)]
 
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
@@ -39,8 +39,8 @@ class GradACO:
 
         # 1b. Fetch valid bins group
         h5f = h5py.File(self.d_set.h5_file, 'r')
-        grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix/'
-        ranks = h5f[grp_name]
+        grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix'
+        ranks = h5f[grp_name][:]  # [:] TO BE REMOVED
         # m = self.d_set.col_count
         # n = self.d_set.attr_size
         # k = int(n * (n - 1) / 2)
@@ -185,12 +185,8 @@ class GradACO:
         gen_pattern = GP()
 
         h5f = h5py.File(self.d_set.h5_file, 'r')
-        grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix/'
-        ranks = h5f[grp_name]
-        # m = self.d_set.col_count
-        # n = self.d_set.attr_size
-        # k = int(n * (n - 1) / 2)
-        # ranks = np.memmap(self.d_set.np_file, dtype=float, mode='r', shape=(k, m))
+        grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix'
+        ranks = h5f[grp_name][:]  # [:] TO BE REMOVED
 
         main_bin = ranks[:, pattern.gradual_items[0].attribute_col]
         for i in range(len(pattern.gradual_items)):

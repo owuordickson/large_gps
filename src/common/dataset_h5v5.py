@@ -99,14 +99,14 @@ class Dataset:
         n = self.attr_size
         m = self.col_count
         k = int(n * (n - 1) / 2)
-        if k > 10000:
-            ch = 10000
-        else:
-            ch = k
+        # if k > 10000:
+        #    ch = 10000
+        # else:
+        #    ch = k
 
         grp_name = 'dataset/' + self.step_name + '/rank_matrix'
-        rank_matrix = h5f.create_dataset(grp_name, (k, m), chunks=(ch, m),
-                                         compression="gzip", compression_opts=9, shuffle=True)  # )
+        rank_matrix = h5f.create_dataset(grp_name, (k, m), chunks=True,
+                                         compression="gzip", compression_opts=9, shuffle=True)
         # rank_matrix = np.memmap(self.np_file, dtype=float, mode='w+', shape=(k, m))
 
         # 4. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
