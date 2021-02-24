@@ -15,7 +15,6 @@ Changes
 
 """
 import csv
-import h5py
 from dateutil.parser import parse
 import time
 import numpy as np
