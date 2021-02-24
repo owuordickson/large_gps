@@ -12,6 +12,8 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
 import numpy as np
+import zarr
+
 from common.gp_v4 import GI, GP
 from common.dataset_z5v5 import Dataset
 
@@ -28,22 +30,22 @@ class GradACO:
     def generate_d(self):
         # 1a. Retrieve/Generate distance matrix (d)
         grp_name = 'dataset/' + self.d_set.step_name + '/valid_items'
-        attr_keys = [x.decode() for x in self.d_set.read_h5_dataset(grp_name)]
+        attr_keys = [x.decode() for x in self.d_set.read_zarr_dataset(grp_name)]
 
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
-        d = self.d_set.read_h5_dataset(grp_name)
+        d = self.d_set.read_zarr_dataset(grp_name)
         if d.size > 0:
             # 1b. Fetch valid bins group
             return d, attr_keys
 
         # 1b. Fetch valid bins group
-        h5f = h5py.File(self.d_set.h5_file, 'r')
+        z_root = zarr.open(self.d_set.z_file, 'r')
         grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix'
-        ranks = h5f[grp_name][:]  # [:] TO BE REMOVED
+        ranks = z_root[grp_name][:]  # [:] TO BE REMOVED
 
         # 2. Initialize an empty d-matrix
         n = len(attr_keys)
-        d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
+        d = np.zeros((n, n), dtype=np.dtype('i8'))  # cumulative sum of all segments
         for i in range(n):
             for j in range(n):
                 gi_1 = GI.parse_gi(attr_keys[i])
@@ -67,9 +69,8 @@ class GradACO:
                     temp_bin = np.where(bin_1 == bin_2, 1, 0)
                     d[i][j] += np.sum(temp_bin)
         # print(d)
-        h5f.close()
         grp_name = 'dataset/' + self.d_set.step_name + '/d_matrix'
-        self.d_set.add_h5_dataset(grp_name, d, compress=True)
+        self.d_set.add_zarr_dataset(grp_name, d, compress=True)
         return d, attr_keys
 
     def run_ant_colony(self):
@@ -175,9 +176,9 @@ class GradACO:
         n = self.d_set.attr_size
         gen_pattern = GP()
 
-        h5f = h5py.File(self.d_set.h5_file, 'r')
+        z_root = zarr.open(self.d_set.z_file, 'r')
         grp_name = 'dataset/' + self.d_set.step_name + '/rank_matrix'
-        ranks = h5f[grp_name][:]  # [:] TO BE REMOVED
+        ranks = z_root[grp_name][:]  # [:] TO BE REMOVED
 
         main_bin = ranks[:, pattern.gradual_items[0].attribute_col]
         for i in range(len(pattern.gradual_items)):
@@ -201,7 +202,6 @@ class GradACO:
                     gen_pattern.add_gradual_item(gi)
                     gen_pattern.set_support(supp)
 
-        h5f.close()
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
         else:

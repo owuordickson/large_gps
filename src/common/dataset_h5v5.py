@@ -28,8 +28,7 @@ from common.gp_v4 import GI
 class Dataset:
 
     def __init__(self, file_path, min_sup=0.5, eq=False):
-        self.np_file = str(Path(file_path).stem) + str('.dat')
-        self.h5_file = str(Path(file_path).stem) + str('.h5')
+        self.h5_file = 'app_data/' + str(Path(file_path).stem) + str('.h5')
         if os.path.exists(self.h5_file):
             print("Fetching data from h5 file")
             h5f = h5py.File(self.h5_file, 'r')

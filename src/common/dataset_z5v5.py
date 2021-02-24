@@ -15,6 +15,8 @@ Changes
 
 """
 import csv
+import zarr
+from numcodecs import Blosc
 from dateutil.parser import parse
 import time
 import numpy as np
@@ -27,21 +29,19 @@ from common.gp_v4 import GI
 class Dataset:
 
     def __init__(self, file_path, min_sup=0.5, eq=False):
-        self.np_file = str(Path(file_path).stem) + str('.dat')
-        self.h5_file = str(Path(file_path).stem) + str('.h5')
-        if os.path.exists(self.h5_file):
-            print("Fetching data from h5 file")
-            h5f = h5py.File(self.h5_file, 'r')
-            self.titles = h5f['dataset/titles'][:]
-            self.time_cols = h5f['dataset/time_cols'][:]
-            self.attr_cols = h5f['dataset/attr_cols'][:]
-            size = h5f['dataset/size_arr'][:]
+        self.z_file = 'app_data/' + str(Path(file_path).stem) + str('.zarr')
+        if os.path.exists(self.z_file):
+            print("Fetching data from Zarr file")
+            z_root = zarr.open(self.z_file, 'r')
+            self.titles = z_root['dataset/titles'][:]
+            self.time_cols = z_root['dataset/time_cols'][:]
+            self.attr_cols = z_root['dataset/attr_cols'][:]
+            size = z_root['dataset/size_arr'][:]
             self.col_count = size[0]
             self.row_count = size[1]
             self.attr_size = size[2]
             valid_count = size[3]
             self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
-            h5f.close()
             self.thd_supp = min_sup
             if valid_count < 3:
                 self.no_bins = True
@@ -91,8 +91,8 @@ class Dataset:
         self.step_name = 'step_' + str(int(self.row_count - self.attr_size))
 
         # 2. Initialize h5 groups to store class attributes
-        self.init_h5_groups()
-        h5f = h5py.File(self.h5_file, 'r+')
+        self.init_zarr_groups()
+        z_root = zarr.open(self.z_file, 'r+')
 
         # 3. Initialize (k x attr) matrix
         n = self.attr_size
@@ -104,8 +104,9 @@ class Dataset:
         #    ch = k
 
         grp_name = 'dataset/' + self.step_name + '/rank_matrix'
-        rank_matrix = h5f.create_dataset(grp_name, (k, m), dtype=np.float16, chunks=True,
-                                         compression="gzip", compression_opts=9, shuffle=True)
+        compressor = Blosc(cname='zstd', clevel=3, shuffle=Blosc.BITSHUFFLE)
+        rank_matrix = z_root.create_dataset(grp_name, shape=(k, m), dtype=np.float16, chunks=True,
+                                            compressor=compressor)
         # rank_matrix = np.memmap(self.np_file, dtype=float, mode='w+', shape=(k, m))
 
         # 4. Determine binary rank (fuzzy: 0, 0.5, 1) and calculate support of pattern
@@ -136,49 +137,48 @@ class Dataset:
                 valid_items.append(decr.as_string())
                 valid_count += 2
 
-        h5f.close()
         grp_name = 'dataset/' + self.step_name + '/valid_items'
-        self.add_h5_dataset(grp_name, np.array(valid_items).astype('S'))
+        self.add_zarr_dataset(grp_name, np.array(valid_items).astype('S'))
         data_size = np.array([self.col_count, self.row_count, self.attr_size, valid_count])
-        self.add_h5_dataset('dataset/size_arr', data_size)
+        self.add_zarr_dataset('dataset/size_arr', data_size)
         if valid_count < 3:
             self.no_bins = True
-        # rank_matrix.flush()
         del self.data
         del attr_data
         del valid_items
         gc.collect()
 
-    def init_h5_groups(self):
-        if os.path.exists(self.h5_file):
+    def init_zarr_groups(self):
+        if os.path.exists(self.z_file):
             pass
         else:
-            h5f = h5py.File(self.h5_file, 'w')
-            grp = h5f.require_group('dataset')
+            z_root = zarr.open(self.z_file, 'w')
+            grp = z_root.require_group('dataset')
             grp.create_dataset('titles', data=self.titles)
             # grp.create_dataset('attr_data', data=self.attr_data.astype('S'), compression="gzip",
             #                   compression_opts=9)
             grp.create_dataset('time_cols', data=self.time_cols.astype('u1'))
             grp.create_dataset('attr_cols', data=self.attr_cols.astype('u1'))
-            h5f.close()
+            # z_root.close()
 
-    def read_h5_dataset(self, group):
+    def read_zarr_dataset(self, group):
         temp = np.array([])
-        h5f = h5py.File(self.h5_file, 'r')
-        if group in h5f:
-            temp = h5f[group][:]
-        h5f.close()
+        z_root = zarr.open(self.z_file, 'r')
+        if group in z_root:
+            temp = z_root[group][:]
+        # z_root.close()
         return temp
 
-    def add_h5_dataset(self, group, data, compress=False):
-        h5f = h5py.File(self.h5_file, 'r+')
+    def add_zarr_dataset(self, group, data, compress=False):
+        h5f = zarr.open(self.z_file, 'r+')
         if group in h5f:
             del h5f[group]
         if compress:
-            h5f.create_dataset(group, data=data, chunks=True, compression="gzip", compression_opts=9, shuffle=True)
+            compressor = Blosc(cname='zstd', clevel=3, shuffle=Blosc.BITSHUFFLE)
+            h5f.create_dataset(group, data=data, chunks=True, compressor=compressor)
         else:
             h5f.create_dataset(group, data=data)
-        h5f.close()
+        # h5f.close()
 
     @staticmethod
     def read_csv(file):
