@@ -24,7 +24,7 @@ import gc
 
 class Dataset:
 
-    def __init__(self, file_path, min_sup=0.5, eq=False, chunks=2):
+    def __init__(self, file_path, chunks, min_sup, eq=False):
         self.thd_supp = min_sup
         self.equal = eq
         self.chunks = chunks

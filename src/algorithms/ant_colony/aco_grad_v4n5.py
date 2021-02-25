@@ -18,8 +18,8 @@ from algorithms.common.dataset_v4n5 import Dataset
 
 class GradACO:
 
-    def __init__(self, f_path, min_supp):
-        self.d_set = Dataset(f_path, min_supp)
+    def __init__(self, f_path, chunks, min_supp):
+        self.d_set = Dataset(f_path, chunks, min_supp)
         self.d_set.init_gp_attributes()
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
@@ -48,7 +48,7 @@ class GradACO:
                     for k in range(len(bin_1)):
                         bin_sum += np.sum(np.multiply(bin_1[k], bin_2[k]))
                     d[i][j] += bin_sum
-        print(d)
+        # print(d)
         return d, attr_keys
 
     def run_ant_colony(self):
@@ -153,15 +153,15 @@ class GradACO:
         min_supp = self.d_set.thd_supp
         n = self.d_set.attr_size
         gen_pattern = GP()
-        bin_arr = np.array([])
+        bin_arr = []
 
         for gi in pattern.gradual_items:
             arg = np.argwhere(np.isin(self.d_set.valid_bins[:, 0], gi.gradual_item))
             if len(arg) > 0:
                 i = arg[0][0]
                 valid_bin = self.d_set.valid_bins[i]
-                if bin_arr.size <= 0:
-                    bin_arr = np.array([valid_bin[1], valid_bin[1]])
+                if len(bin_arr) <= 0:
+                    bin_arr = [valid_bin[1], valid_bin[1]]
                     gen_pattern.add_gradual_item(gi)
                 else:
                     bin_arr[1] = valid_bin[1].copy()

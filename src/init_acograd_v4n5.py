@@ -24,15 +24,15 @@ from optparse import OptionParser
 from algorithms.ant_colony.aco_grad_v4n5 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores):
+def init_algorithm(f_path, min_supp, cores, chunks=5):
     try:
         if cores > 1:
             num_cores = cores
         else:
             num_cores = Profile.get_num_cores()
 
-        ac = GradACO(f_path, min_supp)
-        list_gp = []  # ac.run_ant_colony()
+        ac = GradACO(f_path, chunks, min_supp)
+        list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
         wr_line = "Algorithm: ACO-GRAANK (4.0)\n"
@@ -41,6 +41,7 @@ def init_algorithm(f_path, min_supp, cores):
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
         wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
+        wr_line += "Number of chunks: " + str(chunks) + '\n'
         wr_line += "Number of iterations: " + str(ac.iteration_count) + '\n\n'
 
         for txt in d_set.titles:
@@ -84,14 +85,14 @@ if __name__ == "__main__":
                              dest='file',
                              help='path to file containing csv',
                              # default=None,
-                             default='../data/DATASET.csv',
+                             # default='../data/DATASET.csv',
                              # default='../data/DATASET2.csv',
                              # default='../data/DATASET3.csv',
                              # default='../data/Omnidir.csv',
                              # default='../data/FluTopicData-testsansdate-blank.csv',
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
-                             # default='../data/c2k_02k.csv',
+                             default='../data/c2k_02k.csv',
                              # default='../data/Directio_site15k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
@@ -129,4 +130,4 @@ if __name__ == "__main__":
     wr_text += str(res_text)
     f_name = str('res_aco' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
-    # print(wr_text)
+    print(wr_text)
