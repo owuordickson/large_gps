@@ -24,7 +24,7 @@ class GradACO:
         self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
-        # self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
+        self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
 
     def generate_d(self):
         v_bins = self.d_set.valid_bins
@@ -37,14 +37,18 @@ class GradACO:
         for i in range(n):
             for j in range(n):
                 if GI.parse_gi(attr_keys[i]).attribute_col == GI.parse_gi(attr_keys[j]).attribute_col:
-                    # Ignore similar attributes (+ or/and -)
+                    # 2a. Ignore similar attributes (+ or/and -)
                     continue
                 else:
                     bin_1 = v_bins[i][1]
                     bin_2 = v_bins[j][1]
                     # Cumulative sum of all segments for 2x2 (all attributes) gradual items
-                    d[i][j] += np.sum(np.multiply(bin_1, bin_2))
-        # print(d)
+                    # 2b. calculate sum from bin ranks (in chunks)
+                    bin_sum = 0
+                    for k in range(len(bin_1)):
+                        bin_sum += np.sum(np.multiply(bin_1[k], bin_2[k]))
+                    d[i][j] += bin_sum
+        print(d)
         return d, attr_keys
 
     def run_ant_colony(self):

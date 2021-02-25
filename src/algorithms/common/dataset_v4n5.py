@@ -80,17 +80,17 @@ class Dataset:
             col_bins_pos = []
             col_bins_neg = []
             bin_sum = 0
-            print(col_segs)
+            # print(col_segs)
             for i in range(self.chunks):
                 for j in range(self.chunks):
                     with np.errstate(invalid='ignore'):
                         tmp_bin = col_segs[i] > col_segs[j][:, np.newaxis]
-                        col_bins_pos.append(tmp_bin)
-                        col_bins_neg.append(tmp_bin.T)
                         bin_sum += np.sum(tmp_bin)
-            print(col_bins_pos)
-            print(bin_sum)
-            print("---\n")
+                        col_bins_pos.append(tmp_bin)
+                        col_bins_neg.append(col_segs[i] < col_segs[j][:, np.newaxis])
+            # print(col_bins_pos)
+            # print(bin_sum)
+            # print("---\n")
 
             # 2a. Generate 1-itemset gradual items
             # with np.errstate(invalid='ignore'):
