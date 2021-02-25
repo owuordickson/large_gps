@@ -165,10 +165,18 @@ class GradACO:
                     gen_pattern.add_gradual_item(gi)
                 else:
                     bin_arr[1] = valid_bin[1].copy()
-                    temp_bin = np.multiply(bin_arr[0], bin_arr[1])
-                    supp = float(np.sum(temp_bin)) / float(n * (n - 1.0) / 2.0)
+                    # temp_bin = np.multiply(bin_arr[0], bin_arr[1])
+
+                    bin_sum = 0
+                    tmp_bin = []
+                    for k in range(len(bin_arr[0])):
+                        bin_prod = np.multiply(bin_arr[0][k], bin_arr[1][k])
+                        bin_sum += np.sum(bin_prod)
+                        tmp_bin.append(bin_prod)
+
+                    supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
                     if supp >= min_supp:
-                        bin_arr[0] = temp_bin.copy()
+                        bin_arr[0] = tmp_bin.copy()
                         gen_pattern.add_gradual_item(gi)
                         gen_pattern.set_support(supp)
         if len(gen_pattern.gradual_items) <= 1:
