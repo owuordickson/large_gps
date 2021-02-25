@@ -34,7 +34,7 @@ class GradACO:
 
         # 2. Initialize an empty d-matrix
         n = len(attr_keys)
-        d = np.zeros((n, n), dtype=float)  # cumulative sum of all segments
+        d = np.zeros((n, n), dtype=np.dtype('i8'))  # cumulative sum of all segments
         for i in range(n):
             for j in range(n):
                 gi_1 = GI.parse_gi(attr_keys[i])

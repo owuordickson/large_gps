@@ -79,21 +79,27 @@ class Dataset:
             decr = GI(col, '-')
 
             # 3a. Determine gradual ranks
-            bin_sum = 0
-            row = 0
-            for i in range(n):
-                for j in range(i + 1, n):
-                    if col_data[i] > col_data[j]:
-                        self.rank_matrix[row][col] = 1
-                        bin_sum += 1
-                    elif col_data[j] > col_data[i]:
-                        self.rank_matrix[row][col] = 0.5
-                        bin_sum += 1
-                    row += 1
+            tmp_rank = np.where(col_data < col_data[:, np.newaxis], 1,
+                                np.where(col_data > col_data[:, np.newaxis], 0.5, 0))
+            tmp_rank = tmp_rank[np.triu_indices(n, k=1)]
+
+            # 3a. Determine gradual ranks
+            # bin_sum = 0
+            # row = 0
+            # for i in range(n):
+            #    for j in range(i + 1, n):
+            #        if col_data[i] > col_data[j]:
+            #            self.rank_matrix[row][col] = 1
+            #            bin_sum += 1
+            #        elif col_data[j] > col_data[i]:
+            #            self.rank_matrix[row][col] = 0.5
+            #            bin_sum += 1
+            #        row += 1
 
             # 3b. Check support of each generated item-set
-            supp = float(np.sum(bin_sum)) / float(n * (n - 1.0) / 2.0)
+            supp = float(np.count_nonzero(tmp_rank)) / float(n * (n - 1.0) / 2.0)
             if supp >= self.thd_supp:
+                self.rank_matrix[:, col] = tmp_rank
                 self.valid_items.append(incr.as_string())
                 self.valid_items.append(decr.as_string())
                 valid_count += 2
