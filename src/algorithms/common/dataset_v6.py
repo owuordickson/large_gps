@@ -8,7 +8,7 @@
 @created: "12 July 2019"
 @modified: "17 Feb 2021"
 
-Changes
+Changes (Similar to v4.0)
 -------
 1. Fetch all binaries during initialization
 2. Replaced loops for fetching binary rank with numpy function

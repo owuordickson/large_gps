@@ -21,7 +21,7 @@ Description:
 import sys
 from optparse import OptionParser
 # from common.profile_mem import Profile
-from algorithms.ant_colony.aco_grad_v4n5 import GradACO
+from algorithms.ant_colony.aco_grad_h5v6 import GradACO
 
 
 def init_algorithm(f_path, min_supp, cores, chunks=5):
@@ -35,7 +35,7 @@ def init_algorithm(f_path, min_supp, cores, chunks=5):
         list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
-        wr_line = "Algorithm: ACO-GRAANK (4.0)\n"
+        wr_line = "Algorithm: ACO-GRAANK HF5 (6.0)\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
         wr_line += "No. of (dataset) tuples: " + str(ac.d_set.row_count) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
