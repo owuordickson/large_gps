@@ -62,7 +62,7 @@ class Dataset:
         # 1. Transpose csv array data
         if attr_data is None:
             attr_data = self.data.T.copy()
-            self.data = None
+            del self.data
             self.attr_size = self.row_count
         else:
             self.attr_size = len(attr_data[self.attr_cols[0]])
@@ -111,7 +111,7 @@ class Dataset:
         # print(self.valid_bins)
         if len(self.valid_bins) < 3:
             self.no_bins = True
-        attr_data = None
+        del attr_data
         gc.collect()
 
     @staticmethod
