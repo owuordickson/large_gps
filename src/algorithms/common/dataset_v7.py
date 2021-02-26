@@ -40,20 +40,26 @@ class Dataset:
         return attr_cols
 
     def init_gp_attributes(self):
-        # print(self.print_header())
-        # print(self.attr_cols)
         n = self.row_count
         valid_bins = list()
         for col in self.attr_cols:
-            self.read_csv_data(col)
+            bin_sum = 0
+            for chunk_1 in self.read_csv_data(col, self.chunk_size):
+                for chunk_2 in self.read_csv_data(col, self.chunk_size):
+                    tmp_rank = chunk_1.values > chunk_2.values[:, np.newaxis]
+                    bin_sum += np.sum(tmp_rank)
+                    tmp_rank = chunk_1.values < chunk_2.values[:, np.newaxis]
+                    print(tmp_rank)
+            print(bin_sum)
+            print("----\n")
 
-    def read_csv_data(self, col):
+    def read_csv_data(self, col, c_size):
         if self.titles.dtype is np.int32:
-            df = pd.read_csv(self.csv_file, sep="[;,' '\t]", header=None, engine='python')
+            chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=[col], chunksize=c_size, header=None,
+                                engine='python')
         else:
-            df = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=[col], engine='python')
-        print(df)
-        return df.values
+            chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=[col], chunksize=c_size, engine='python')
+        return chunk
 
     def print_header(self):
         str_header = "Header Columns/Attributes\n-------------------------\n"
