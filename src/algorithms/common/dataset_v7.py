@@ -23,6 +23,8 @@ import time
 import numpy as np
 import pandas as pd
 
+from algorithms.common.gp_v4 import GI
+
 
 class Dataset:
 
@@ -35,6 +37,7 @@ class Dataset:
         self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
         self.attr_cols = self.get_attr_cols()
         self.row_count = 0  # TO BE UPDATED
+        self.no_bins = False
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)
@@ -42,18 +45,50 @@ class Dataset:
         return attr_cols
 
     def init_gp_attributes(self):
-        h5f = h5py.File(self.h5_file, 'r+')
-        # valid_bins = list()
+        # 1. Initiate HDF5 file
+        h5f = h5py.File(self.h5_file, 'w')
+
+        # 2. Construct and store 1-item_set valid rank bins
+        valid_count = 0
         for col in self.attr_cols:
+            incr = GI(col, '+')
+            decr = GI(col, '-')
+
+            chunk_count = 0
             bin_sum = 0
+            n = 0
+            # Execute binary rank
             for chunk_1 in self.read_csv_data(col, self.chunk_size):
+                n += chunk_1.values.shape[0]
                 for chunk_2 in self.read_csv_data(col, self.chunk_size):
                     tmp_rank = chunk_1.values > chunk_2.values[:, np.newaxis]
                     bin_sum += np.sum(tmp_rank)
+                    grp_name = 'dataset/rank_bins/' + incr.as_string() + '/' + str(chunk_count)
+                    h5f.create_dataset(grp_name, data=tmp_rank)
+
                     tmp_rank = chunk_1.values < chunk_2.values[:, np.newaxis]
-                    print(tmp_rank)
-            print(bin_sum)
-            print("----\n")
+                    grp_name = 'dataset/rank_bins/' + decr.as_string() + '/' + str(chunk_count)
+                    h5f.create_dataset(grp_name, data=tmp_rank)
+                    chunk_count += 1
+                    del tmp_rank
+
+            # 3b. Check support of each bin_rank
+            if self.row_count == 0:
+                self.row_count = n
+            supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
+            if supp >= self.thd_supp:
+                valid_count += 2
+            else:
+                grp_name = 'dataset/rank_bins/' + incr.as_string() + '/'
+                del h5f[grp_name]
+                grp_name = 'dataset/rank_bins/' + decr.as_string() + '/'
+                del h5f[grp_name]
+
+        # print(h5f['dataset/rank_bins/'].keys())
+        h5f.close()
+        gc.collect()
+        if valid_count < 3:
+            self.no_bins = True
 
     def read_csv_data(self, col, c_size):
         if self.titles.dtype is np.int32:
