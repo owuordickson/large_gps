@@ -16,6 +16,7 @@ Changes
 
 """
 import gc
+import os
 from pathlib import Path
 from dateutil.parser import parse
 import h5py
@@ -30,15 +31,32 @@ class Dataset:
 
     def __init__(self, file_path, c_size, min_sup, eq=False):
         self.h5_file = 'app_data/' + str(Path(file_path).stem) + str('.h5')
-        self.csv_file = file_path
-        self.thd_supp = min_sup
-        self.equal = eq
-        self.chunk_size = c_size
-        self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
-        self.attr_cols = self.get_attr_cols()
-        self.row_count = 0  # TO BE UPDATED
-        self.no_bins = False
-        self.init_gp_attributes()
+        if os.path.exists(self.h5_file):
+            print("Fetching data from h5 file")
+            h5f = h5py.File(self.h5_file, 'r')
+            self.titles = h5f['dataset/titles'][:]
+            self.time_cols = h5f['dataset/time_cols'][:]
+            self.attr_cols = h5f['dataset/attr_cols'][:]
+            size = h5f['dataset/size_arr'][:]
+            self.col_count = size[0]
+            self.row_count = size[1]
+            valid_count = size[2]
+            h5f.close()
+            self.thd_supp = min_sup
+            if valid_count < 3:
+                self.no_bins = True
+            else:
+                self.no_bins = False
+        else:
+            self.csv_file = file_path
+            self.thd_supp = min_sup
+            self.equal = eq
+            self.chunk_size = c_size
+            self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
+            self.attr_cols = self.get_attr_cols()
+            self.row_count = 0  # TO BE UPDATED
+            self.no_bins = False
+            self.init_gp_attributes()
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)
@@ -48,7 +66,6 @@ class Dataset:
     def init_gp_attributes(self):
         # 1. Initiate HDF5 file
         h5f = h5py.File(self.h5_file, 'w')
-
         # 2. Construct and store 1-item_set valid rank bins
         valid_count = 0
         for col in self.attr_cols:
@@ -85,6 +102,10 @@ class Dataset:
                 grp_name = 'dataset/rank_bins/' + decr.as_string() + '/'
                 del h5f[grp_name]
         # print(h5f['dataset/rank_bins/'].keys())
+        h5f.create_dataset('dataset/titles', data=self.titles)
+        h5f.create_dataset('dataset/time_cols', data=self.time_cols.astype('u1'))
+        h5f.create_dataset('dataset/attr_cols', data=self.attr_cols.astype('u1'))
+        h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count, self.row_count, valid_count]))
         h5f.close()
         gc.collect()
         if valid_count < 3:
