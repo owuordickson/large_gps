@@ -1,0 +1,52 @@
+C:\Users\dowuor\PycharmProjects\hdf5_gps\venv\Scripts\python.exe C:\Users\dowuor\PycharmProjects\hdf5_gps\src\init_acograd_v7.py
+Header titles fetched from CSV file
+Run-time: 4922.249287843704 seconds
+Total allocated memory size: 524.9 KiB
+Algorithm: ACO-GRAANK (6.0)
+No. of (dataset) attributes: 21
+No. of (dataset) objects: 15402
+Minimum support: 0.5
+Number of cores: 4
+Number of patterns: 9
+Number of chunks: 1000
+Number of iterations: 10
+
+Header Columns/Attributes
+-------------------------
+0. date_time
+1. id_site
+2. Tpic
+3. Dir
+4. Etal
+5. Tz
+6. Hm0
+7. Ts1
+8. Ts2
+9. Tc
+10. Tav
+11. Tint
+12. Tp
+13. EPS2
+14. EPS4
+15. Qp
+16. S2
+17. Tref
+18. Tw
+19. Batt
+20. timestamp
+
+File: ../data/Directio_site15k.csv
+
+Pattern : Support
+['11-', '10-'] : 0.691
+['9-', '2+'] : 0.676
+['3-', '14+'] : 0.523
+['14-', '4+'] : 0.547
+['13-', '9-'] : 0.889
+['2+', '6-', '9-'] : 0.619
+['1-', '12-', '9-'] : 0.668
+['14-', '6+'] : 0.632
+['8-', '1-'] : 0.668
+
+
+Process finished with exit code 0
