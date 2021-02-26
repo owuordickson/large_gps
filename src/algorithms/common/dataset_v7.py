@@ -16,7 +16,9 @@ Changes
 
 """
 import gc
+from pathlib import Path
 from dateutil.parser import parse
+import h5py
 import time
 import numpy as np
 import pandas as pd
@@ -25,6 +27,7 @@ import pandas as pd
 class Dataset:
 
     def __init__(self, file_path, c_size, min_sup, eq=False):
+        self.h5_file = 'app_data/' + str(Path(file_path).stem) + str('.h5')
         self.csv_file = file_path
         self.thd_supp = min_sup
         self.equal = eq
@@ -39,6 +42,7 @@ class Dataset:
         return attr_cols
 
     def init_gp_attributes(self):
+        h5f = h5py.File(self.h5_file, 'r+')
         # valid_bins = list()
         for col in self.attr_cols:
             bin_sum = 0
