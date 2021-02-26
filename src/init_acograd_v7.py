@@ -24,15 +24,15 @@ from optparse import OptionParser
 from algorithms.ant_colony.aco_grad_v6 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores, chunks=5):
+def init_algorithm(f_path, min_supp, cores, chunk_size=5):
     try:
         if cores > 1:
             num_cores = cores
         else:
             num_cores = Profile.get_num_cores()
 
-        ac = GradACO(f_path, chunks, min_supp)
-        list_gp = ac.run_ant_colony()
+        ac = GradACO(f_path, chunk_size, min_supp)
+        list_gp = []  # ac.run_ant_colony()
 
         d_set = ac.d_set
         wr_line = "Algorithm: ACO-GRAANK (6.0)\n"
@@ -41,14 +41,10 @@ def init_algorithm(f_path, min_supp, cores, chunks=5):
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
         wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
-        wr_line += "Number of chunks: " + str(chunks) + '\n'
+        wr_line += "Number of chunks: " + str(chunk_size) + '\n'
         wr_line += "Number of iterations: " + str(ac.iteration_count) + '\n\n'
 
-        for txt in d_set.titles:
-            try:
-                wr_line += (str(txt.key) + '. ' + str(txt.value.decode()) + '\n')
-            except AttributeError:
-                wr_line += (str(txt[0]) + '. ' + str(txt[1].decode()) + '\n')
+        wr_line += ac.d_set.print_header()
 
         wr_line += str("\nFile: " + f_path + '\n')
         wr_line += str("\nPattern : Support" + '\n')
@@ -130,4 +126,4 @@ if __name__ == "__main__":
     wr_text += str(res_text)
     f_name = str('res_aco' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
-    print(wr_text)
+    # print(wr_text)

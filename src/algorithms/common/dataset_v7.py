@@ -17,33 +17,43 @@ Changes
 """
 import csv
 import gc
-
+from dateutil.parser import parse
+import time
 import numpy as np
 import pandas as pd
 
 
 class Dataset:
 
-    def __init__(self, file_path, chunks, min_sup, eq=False):
+    def __init__(self, file_path, c_size, min_sup, eq=False):
         self.csv_file = file_path
         self.thd_supp = min_sup
         self.equal = eq
-        self.chunk_count = chunks
-        self.titles = Dataset.read_csv_header(file_path)
-        self.col_count = self.titles.size  # TO BE UPDATED
+        self.chunk_size = c_size
+        self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
+        self.attr_cols = self.get_attr_cols()
         self.row_count = 0  # TO BE UPDATED
+
+    def get_attr_cols(self):
+        all_cols = np.arange(self.col_count)
+        attr_cols = np.setdiff1d(all_cols, self.time_cols)
+        return attr_cols
 
     def init_gp_attributes(self):
         # print(self.print_header())
-        self.read_csv_data()
-        pass
+        # print(self.attr_cols)
+        n = self.row_count
+        valid_bins = list()
+        for col in self.attr_cols:
+            self.read_csv_data(col)
 
-    def read_csv_data(self):
-        if self.titles.size > 0:
-            df = pd.read_csv(self.csv_file, sep="[;,' '\t]", engine='python')
+    def read_csv_data(self, col):
+        if self.titles.dtype is np.int32:
+            df = pd.read_csv(self.csv_file, sep="[;,' '\t]", header=None, engine='python')
         else:
-            df = pd.read_csv(self.csv_file, sep="[;,' '\t]", engine='python', header=None)
+            df = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=[col], engine='python')
         print(df)
+        return df.values
 
     def print_header(self):
         str_header = "Header Columns/Attributes\n-------------------------\n"
@@ -60,7 +70,8 @@ class Dataset:
     @staticmethod
     def read_csv_header(file):
         try:
-            header_row = pd.read_csv(file, sep="[;,' '\t]", engine='python', nrows=0).columns.tolist()
+            df = pd.read_csv(file, sep="[;,' '\t]", engine='python', nrows=1)
+            header_row = df.columns.tolist()
 
             if len(header_row) <= 0:
                 print("CSV file is empty!")
@@ -80,7 +91,40 @@ class Dataset:
                         titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
                 del header_row
                 gc.collect()
-                return titles
+                return titles, titles.size, Dataset.get_time_cols(df.values)
         except Exception as error:
             print("Unable to read 1st line of CSV file")
             raise Exception("CSV file read error. " + str(error))
+
+    @staticmethod
+    def get_time_cols(data):
+        # Retrieve first column only
+        time_cols = list()
+        # n = len(data)
+        for i in range(data.shape[1]):  # check every column/attribute for time format
+            row_data = str(data[0][i])
+            try:
+                time_ok, t_stamp = Dataset.test_time(row_data)
+                if time_ok:
+                    time_cols.append(i)
+            except ValueError:
+                continue
+        return np.array(time_cols)
+
+    @staticmethod
+    def test_time(date_str):
+        # add all the possible formats
+        try:
+            if type(int(date_str)):
+                return False, False
+        except ValueError:
+            try:
+                if type(float(date_str)):
+                    return False, False
+            except ValueError:
+                try:
+                    date_time = parse(date_str)
+                    t_stamp = time.mktime(date_time.timetuple())
+                    return True, t_stamp
+                except ValueError:
+                    raise ValueError('no valid date-time format found')
