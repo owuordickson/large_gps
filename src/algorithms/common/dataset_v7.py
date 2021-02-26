@@ -38,6 +38,7 @@ class Dataset:
         self.attr_cols = self.get_attr_cols()
         self.row_count = 0  # TO BE UPDATED
         self.no_bins = False
+        self.init_gp_attributes()
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)
@@ -72,7 +73,7 @@ class Dataset:
                     chunk_count += 1
                     del tmp_rank
 
-            # 3b. Check support of each bin_rank
+            # Check support of each bin_rank
             if self.row_count == 0:
                 self.row_count = n
             supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
@@ -83,7 +84,6 @@ class Dataset:
                 del h5f[grp_name]
                 grp_name = 'dataset/rank_bins/' + decr.as_string() + '/'
                 del h5f[grp_name]
-
         # print(h5f['dataset/rank_bins/'].keys())
         h5f.close()
         gc.collect()
