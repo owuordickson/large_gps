@@ -13,7 +13,7 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 """
 import numpy as np
 from algorithms.common.gp_v4 import GI, GP
-from algorithms.common.dataset_v6 import Dataset
+from algorithms.common.dataset_v7 import Dataset
 
 
 class GradACO:
@@ -21,10 +21,10 @@ class GradACO:
     def __init__(self, f_path, chunks, min_supp):
         self.d_set = Dataset(f_path, chunks, min_supp)
         self.d_set.init_gp_attributes()
-        self.attr_index = self.d_set.attr_cols
+        # self.attr_index = self.d_set.attr_cols
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
-        self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
+        # self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
 
     def generate_d(self):
         v_bins = self.d_set.valid_bins
