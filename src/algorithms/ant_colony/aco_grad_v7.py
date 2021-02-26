@@ -11,7 +11,6 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
-import gc
 import h5py
 import numpy as np
 from algorithms.common.gp_v4 import GI, GP
