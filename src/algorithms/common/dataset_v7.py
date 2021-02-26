@@ -15,7 +15,6 @@ Changes
 3. Chunks CSV file read
 
 """
-import csv
 import gc
 from dateutil.parser import parse
 import time
@@ -40,8 +39,7 @@ class Dataset:
         return attr_cols
 
     def init_gp_attributes(self):
-        n = self.row_count
-        valid_bins = list()
+        # valid_bins = list()
         for col in self.attr_cols:
             bin_sum = 0
             for chunk_1 in self.read_csv_data(col, self.chunk_size):
