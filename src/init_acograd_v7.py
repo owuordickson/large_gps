@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
 @author: "Dickson Owuor"
-@credits: "Thomas Runkler, Edmond Menya, and Anne Laurent,"
+@credits: "Anne Laurent,"
 @license: "MIT"
-@version: "4.0"
+@version: "7.0"
 @email: "owuordickson@gmail.com"
 @created: "17 Feb 2021"
 
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 Usage:
-    $python init_acograd_v4.py -f ../data/DATASET.csv -s 0.5
+    $python init_acograd_v7.py -f ../data/DATASET.csv -s 0.5
 
 Description:
     f -> file path (CSV)
@@ -35,7 +35,7 @@ def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
         list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
-        wr_line = "Algorithm: ACO-GRAANK (6.0)\n"
+        wr_line = "Algorithm: ACO-GRAANK (7.0)\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
         wr_line += "No. of (dataset) objects: " + str(ac.d_set.row_count) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
