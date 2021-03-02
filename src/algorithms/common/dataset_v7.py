@@ -79,13 +79,25 @@ class Dataset:
                 n += chunk_1.values.shape[0]
                 for chunk_2 in self.read_csv_data(col, self.chunk_size):
                     tmp_rank = chunk_1.values > chunk_2.values[:, np.newaxis]
-                    bin_sum += np.sum(tmp_rank)
+                    tmp_sum = np.sum(tmp_rank)
                     grp_name = 'dataset/rank_bins/' + incr.as_string() + '/' + str(chunk_count)
-                    h5f.create_dataset(grp_name, data=tmp_rank, compression="gzip", compression_opts=9, shuffle=True)
+                    if (tmp_sum / self.chunk_size) >= 0.5:
+                        h5f.create_dataset(grp_name, data=tmp_rank, compression="gzip", compression_opts=9, shuffle=True)
+                    else:
+                        h5f.create_dataset(grp_name, data=np.array([]))
+                        print('Skipped: ' + str(tmp_sum / self.chunk_size) + ' - ' + incr.as_string() + '/' + str(chunk_count))
 
                     tmp_rank = chunk_1.values < chunk_2.values[:, np.newaxis]
+                    tmp_sum = np.sum(tmp_rank)
                     grp_name = 'dataset/rank_bins/' + decr.as_string() + '/' + str(chunk_count)
-                    h5f.create_dataset(grp_name, data=tmp_rank, compression="gzip", compression_opts=9, shuffle=True)
+                    if (tmp_sum / self.chunk_size) >= 0.5:
+                        h5f.create_dataset(grp_name, data=tmp_rank, compression="gzip", compression_opts=9, shuffle=True)
+                        bin_sum += tmp_sum
+                    else:
+                        h5f.create_dataset(grp_name, data=np.array([]))
+                        print('Skipped: ' + str(tmp_sum / self.chunk_size) + ' - ' + decr.as_string() + '/' + str(chunk_count))
+
+                    # bin_sum += tmp_sum
                     chunk_count += 1
                     del tmp_rank
 
