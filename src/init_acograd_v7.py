@@ -36,13 +36,14 @@ def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
 
         d_set = ac.d_set
         wr_line = "Algorithm: ACO-GRAANK (7.0)\n"
-        wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
-        wr_line += "No. of (dataset) objects: " + str(ac.d_set.row_count) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
-        wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
-        wr_line += "Number of chunks: " + str(chunk_size) + '\n'
-        wr_line += "Number of iterations: " + str(ac.iteration_count) + '\n\n'
+        wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
+        wr_line += "No. of (dataset) objects: " + str(ac.d_set.row_count) + '\n'
+        wr_line += "No. of used chunks: " + str(ac.d_set.chunk_count - ac.d_set.skipped_chunks) + '\n'
+        wr_line += "No. of skipped chunks: " + str(ac.d_set.skipped_chunks) + '\n'
+        wr_line += "No. of iterations: " + str(ac.iteration_count) + '\n'
+        wr_line += "No. of patterns: " + str(len(list_gp)) + '\n\n'
 
         wr_line += ac.d_set.print_header()
 

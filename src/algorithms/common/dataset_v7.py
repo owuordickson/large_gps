@@ -40,6 +40,8 @@ class Dataset:
             self.col_count = size[0]
             self.row_count = size[1]
             valid_count = size[2]
+            self.chunk_count = size[3]
+            self.skipped_chunks = size[4]
             h5f.close()
             self.thd_supp = min_sup
             if valid_count < 3:
@@ -54,6 +56,8 @@ class Dataset:
             self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
             self.attr_cols = self.get_attr_cols()
             self.row_count = 0  # TO BE UPDATED
+            self.chunk_count = 0
+            self.skipped_chunks = 0
             self.no_bins = False
             self.init_gp_attributes()
 
@@ -67,11 +71,12 @@ class Dataset:
         h5f = h5py.File(self.h5_file, 'w')
         # 2. Construct and store 1-item_set valid rank bins
         valid_count = 0
+        chunk_count = 0
+        skipped_chunks = 0
         for col in self.attr_cols:
             incr = GI(col, '+')
             decr = GI(col, '-')
 
-            chunk_count = 0
             bin_sum = 0
             n = 0
             # Execute binary rank
@@ -85,7 +90,7 @@ class Dataset:
                         h5f.create_dataset(grp_name, data=tmp_rank, compression="gzip", compression_opts=9, shuffle=True)
                     else:
                         h5f.create_dataset(grp_name, data=np.array([]))
-                        print('Skipped: ' + str(tmp_sum / self.chunk_size) + ' - ' + incr.as_string() + '/' + str(chunk_count))
+                        skipped_chunks += 1
 
                     tmp_rank = chunk_1.values < chunk_2.values[:, np.newaxis]
                     tmp_sum = np.sum(tmp_rank)
@@ -95,7 +100,7 @@ class Dataset:
                         bin_sum += tmp_sum
                     else:
                         h5f.create_dataset(grp_name, data=np.array([]))
-                        print('Skipped: ' + str(tmp_sum / self.chunk_size) + ' - ' + decr.as_string() + '/' + str(chunk_count))
+                        skipped_chunks += 1
 
                     # bin_sum += tmp_sum
                     chunk_count += 1
@@ -116,9 +121,12 @@ class Dataset:
         h5f.create_dataset('dataset/titles', data=self.titles)
         h5f.create_dataset('dataset/time_cols', data=self.time_cols.astype('u1'))
         h5f.create_dataset('dataset/attr_cols', data=self.attr_cols.astype('u1'))
-        h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count, self.row_count, valid_count]))
+        h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count, self.row_count, valid_count, chunk_count,
+                                                              skipped_chunks]))
         h5f.close()
         gc.collect()
+        self.chunk_count = chunk_count
+        self.skipped_chunks = skipped_chunks
         if valid_count < 3:
             self.no_bins = True
 
