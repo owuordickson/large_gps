@@ -1,15 +1,16 @@
 C:\Users\dowuor\PycharmProjects\hdf5_gps\venv\Scripts\python.exe C:\Users\dowuor\PycharmProjects\hdf5_gps\src\init_acograd_v7.py
 Header titles fetched from CSV file
-Run-time: 4922.249287843704 seconds
-Total allocated memory size: 524.9 KiB
-Algorithm: ACO-GRAANK (6.0)
+Run-time: 3587.2186403274536 seconds
+Total allocated memory size: 615.5 KiB
+Algorithm: ACO-GRAANK (v7.0)
+Minimum support: 0.5
+No of CPU cores: 4
 No. of (dataset) attributes: 21
 No. of (dataset) objects: 15402
-Minimum support: 0.5
-Number of cores: 4
-Number of patterns: 9
-Number of chunks: 1000
-Number of iterations: 10
+No. of (memory) used chunks: 8210
+No. of (memory) skipped chunks: 1518
+No. of (ACO) iterations: 4
+No. of gradual patterns: 4
 
 Header Columns/Attributes
 -------------------------
@@ -38,15 +39,10 @@ Header Columns/Attributes
 File: ../data/Directio_site15k.csv
 
 Pattern : Support
-['11-', '10-'] : 0.691
-['9-', '2+'] : 0.676
-['3-', '14+'] : 0.523
-['14-', '4+'] : 0.547
-['13-', '9-'] : 0.889
-['2+', '6-', '9-'] : 0.619
-['1-', '12-', '9-'] : 0.668
-['14-', '6+'] : 0.632
-['8-', '1-'] : 0.668
+['14-', '7+'] : >= 0.574
+['8-', '4-'] : >= 0.841
+['6-', '17+'] : >= 0.566
+['9-', '15+'] : >= 0.623
 
 
 Process finished with exit code 0

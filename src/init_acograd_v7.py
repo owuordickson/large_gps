@@ -35,23 +35,23 @@ def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
         list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
-        wr_line = "Algorithm: ACO-GRAANK (7.0)\n"
+        wr_line = "Algorithm: ACO-GRAANK (v7.0)\n"
         wr_line += "Minimum support: " + str(min_supp) + '\n'
-        wr_line += "Number of cores: " + str(num_cores) + '\n'
-        wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
-        wr_line += "No. of (dataset) objects: " + str(ac.d_set.row_count) + '\n'
-        wr_line += "No. of used chunks: " + str(ac.d_set.chunk_count - ac.d_set.skipped_chunks) + '\n'
-        wr_line += "No. of skipped chunks: " + str(ac.d_set.skipped_chunks) + '\n'
-        wr_line += "No. of iterations: " + str(ac.iteration_count) + '\n'
-        wr_line += "No. of patterns: " + str(len(list_gp)) + '\n\n'
+        wr_line += "No of CPU cores: " + str(num_cores) + '\n'
+        wr_line += "No. of (dataset) attributes: " + str(d_set.col_count) + '\n'
+        wr_line += "No. of (dataset) objects: " + str(d_set.row_count) + '\n'
+        wr_line += "No. of (memory) used chunks: " + str(d_set.used_chunks) + '\n'
+        wr_line += "No. of (memory) skipped chunks: " + str(d_set.skipped_chunks) + '\n'
+        wr_line += "No. of (ACO) iterations: " + str(ac.iteration_count) + '\n'
+        wr_line += "No. of gradual patterns: " + str(len(list_gp)) + '\n\n'
 
-        wr_line += ac.d_set.print_header()
+        wr_line += d_set.print_header()
 
         wr_line += str("\nFile: " + f_path + '\n')
         wr_line += str("\nPattern : Support" + '\n')
 
         for gp in list_gp:
-            wr_line += (str(gp.to_string()) + ' : ' + str(gp.support) + '\n')
+            wr_line += (str(gp.to_string()) + ' : >= ' + str(gp.support) + '\n')
 
         # wr_line += "\nPheromone Matrix\n"
         # wr_line += str(ac.p_matrix)
