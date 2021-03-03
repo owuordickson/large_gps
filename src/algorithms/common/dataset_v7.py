@@ -128,7 +128,7 @@ class Dataset:
                                                               skipped_chunks]))
         h5f.close()
         gc.collect()
-        self.used_chunks = tmp_count
+        self.used_chunks = used_chunks
         self.skipped_chunks = skipped_chunks
         if valid_count < 3:
             self.no_bins = True
