@@ -4,7 +4,7 @@ Run-time: 3986.243198633194 seconds
 Total allocated memory size: 472.0 KiB
 Algorithm: ACO-GRAANK (v7.0)
 Minimum support: 0.5
-No of CPU cores: 4
+No. of CPU cores: 4
 No. of (dataset) attributes: 9
 No. of (dataset) objects: 46774
 No. of (memory) used chunks: 29508
