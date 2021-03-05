@@ -92,19 +92,14 @@ class Dataset:
                 print("Header titles fetched from CSV file")
                 # 2. Get table headers
                 if header_row[0].replace('.', '', 1).isdigit() or header_row[0].isdigit():
-                    # titles = np.arange(len(header_row))
-                    keys = np.arange(len(header_row))
-                    values = np.array(keys, dtype='S')
+                    titles = np.arange(len(header_row))
                 else:
                     if header_row[1].replace('.', '', 1).isdigit() or header_row[1].isdigit():
-                        # titles = np.arange(len(header_row))
-                        keys = np.arange(len(header_row))
-                        values = np.array(keys, dtype='S')
+                        titles = np.arange(len(header_row))
                     else:
-                        # titles = self.convert_data_to_array(data, has_title=True)
                         keys = np.arange(len(header_row))
                         values = np.array(header_row, dtype='S')
-                titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
+                        titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
                 del header_row
                 gc.collect()
                 return titles, titles.size, Dataset.get_time_cols(df.values)
