@@ -21,10 +21,10 @@ Description:
 import sys
 from optparse import OptionParser
 # from common.profile_mem import Profile
-from algorithms.ant_colony.aco_grad_v7 import GradACO
+from algorithms.ant_colony.aco_grad_v8 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
+def init_algorithm(f_path, min_supp, cores, chunk_size=10000):
     try:
         if cores > 1:
             num_cores = cores
@@ -32,7 +32,7 @@ def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
             num_cores = Profile.get_num_cores()
 
         ac = GradACO(f_path, chunk_size, min_supp)
-        list_gp = ac.run_ant_colony()
+        list_gp = []  # ac.run_ant_colony()
 
         d_set = ac.d_set
         wr_line = "Algorithm: ACO-GRAANK (v7.0)\n"
@@ -82,7 +82,7 @@ if __name__ == "__main__":
                              dest='file',
                              help='path to file containing csv',
                              # default=None,
-                             # default='../data/DATASET.csv',
+                             default='../data/DATASET.csv',
                              # default='../data/DATASET2.csv',
                              # default='../data/DATASET3.csv',
                              # default='../data/Omnidir.csv',
@@ -91,7 +91,7 @@ if __name__ == "__main__":
                              # default='../data/FARSmiss.csv',
                              # default='../data/c2k_02k.csv',
                              # default='../data/Directio_site15k.csv',
-                             default='../data/UCI_household_power_consumption50k.csv',
+                             # default='../data/UCI_household_power_consumption500k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
                              dest='minSup',
@@ -128,4 +128,4 @@ if __name__ == "__main__":
     wr_text += str(res_text)
     f_name = str('res_aco' + str(end).replace('.', '', 1) + '.txt')
     # write_file(wr_text, f_name)
-    print(wr_text)
+    # print(wr_text)

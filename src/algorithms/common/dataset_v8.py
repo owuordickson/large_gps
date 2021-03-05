@@ -3,16 +3,14 @@
 @author: "Dickson Owuor"
 @credits: "Anne Laurent"
 @license: "MIT"
-@version: "7.0"
+@version: "8.0"
 @email: "owuordickson@gmail.com"
 @created: "12 July 2019"
-@modified: "26 Feb 2021"
+@modified: "08 Mar 2021"
 
 Changes
 -------
-1. Fetch all binaries during initialization
-2. Replaced loops for fetching binary rank with numpy function
-3. Chunks CSV file read
+1. Chunks CSV file read
 
 """
 import gc
@@ -23,12 +21,11 @@ import h5py
 import time
 import numpy as np
 import pandas as pd
-from algorithms.common.gp_v4 import GI
 
 
 class Dataset:
 
-    def __init__(self, file_path, c_size, min_sup, eq=False):
+    def __init__(self, file_path):  # , c_size, min_sup, eq=False):
         self.h5_file = 'app_data/' + str(Path(file_path).stem) + str('.h5')
         if os.path.exists(self.h5_file):
             print("Fetching data from h5 file")
@@ -38,100 +35,43 @@ class Dataset:
             self.attr_cols = h5f['dataset/attr_cols'][:]
             size = h5f['dataset/size_arr'][:]
             self.col_count = size[0]
-            self.row_count = size[1]
-            valid_count = size[2]
-            self.used_chunks = size[3]
-            self.skipped_chunks = size[4]
+            # self.row_count = size[1]
+            # valid_count = size[2]
+            # self.used_chunks = size[3]
+            # self.skipped_chunks = size[4]
             h5f.close()
-            self.thd_supp = min_sup
-            if valid_count < 3:
-                self.no_bins = True
-            else:
-                self.no_bins = False
+            # self.thd_supp = min_sup
+            # if valid_count < 3:
+            #    self.no_bins = True
+            # else:
+            #    self.no_bins = False
         else:
             self.csv_file = file_path
-            self.thd_supp = min_sup
-            self.equal = eq
-            self.chunk_size = c_size
+            # self.thd_supp = min_sup
+            # self.equal = eq
+            # self.chunk_size = c_size
             self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
             self.attr_cols = self.get_attr_cols()
-            self.row_count = 0  # TO BE UPDATED
-            self.used_chunks = 0
-            self.skipped_chunks = 0
-            self.no_bins = False
-            self.init_gp_attributes()
+        self.row_count = 0  # TO BE UPDATED
+        self.used_chunks = 0
+        self.skipped_chunks = 0
+        self.save_to_hdf5()
+        # self.no_bins = False
+        # self.init_gp_attributes()
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)
         attr_cols = np.setdiff1d(all_cols, self.time_cols)
         return attr_cols
 
-    def init_gp_attributes(self):
+    def save_to_hdf5(self):
         # 1. Initiate HDF5 file
         h5f = h5py.File(self.h5_file, 'w')
-        # 2. Construct and store 1-item_set valid rank bins
-        valid_count = 0
-        used_chunks = 0
-        skipped_chunks = 0
-        for col in self.attr_cols:
-            incr = GI(col, '+')
-            decr = GI(col, '-')
-
-            tmp_count = 0
-            bin_sum = 0
-            n = 0
-            # Execute binary rank
-            for chunk_1 in self.read_csv_data(col, self.chunk_size):
-                n += chunk_1.values.shape[0]
-                for chunk_2 in self.read_csv_data(col, self.chunk_size):
-                    tmp_rank = chunk_1.values > chunk_2.values[:, np.newaxis]
-                    tmp_sum = np.sum(tmp_rank)
-                    grp = 'dataset/rank_bins/' + incr.as_string() + '/' + str(tmp_count)
-                    if (tmp_sum / self.chunk_size) >= 0.5:
-                        h5f.create_dataset(grp, data=tmp_rank, compression="gzip", compression_opts=9, shuffle=True)
-                        used_chunks += 1
-                    else:
-                        h5f.create_dataset(grp, data=np.array([]))
-                        skipped_chunks += 1
-
-                    tmp_rank = chunk_1.values < chunk_2.values[:, np.newaxis]
-                    tmp_sum = np.sum(tmp_rank)
-                    grp = 'dataset/rank_bins/' + decr.as_string() + '/' + str(tmp_count)
-                    if (tmp_sum / self.chunk_size) >= 0.5:
-                        h5f.create_dataset(grp, data=tmp_rank, compression="gzip", compression_opts=9, shuffle=True)
-                        bin_sum += tmp_sum
-                        used_chunks += 1
-                    else:
-                        h5f.create_dataset(grp, data=np.array([]))
-                        skipped_chunks += 1
-
-                    # bin_sum += tmp_sum
-                    tmp_count += 1
-                    del tmp_rank
-
-            # Check support of each bin_rank
-            if self.row_count == 0:
-                self.row_count = n
-            supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-            if supp >= self.thd_supp:
-                valid_count += 2
-            else:
-                grp = 'dataset/rank_bins/' + incr.as_string() + '/'
-                del h5f[grp]
-                grp = 'dataset/rank_bins/' + decr.as_string() + '/'
-                del h5f[grp]
-        # print(h5f['dataset/rank_bins/'].keys())
         h5f.create_dataset('dataset/titles', data=self.titles)
         h5f.create_dataset('dataset/time_cols', data=self.time_cols.astype('u1'))
         h5f.create_dataset('dataset/attr_cols', data=self.attr_cols.astype('u1'))
-        h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count, self.row_count, valid_count, used_chunks,
-                                                              skipped_chunks]))
+        h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count]))
         h5f.close()
-        gc.collect()
-        self.used_chunks = used_chunks
-        self.skipped_chunks = skipped_chunks
-        if valid_count < 3:
-            self.no_bins = True
 
     def read_csv_data(self, col, c_size):
         if self.titles.dtype is np.int32:

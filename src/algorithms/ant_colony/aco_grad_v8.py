@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 @author: "Dickson Owuor"
-@credits: "Thomas Runkler, Edmond Menya, and Anne Laurent,"
+@credits: "Anne Laurent,"
 @license: "MIT"
-@version: "7.0"
+@version: "8.0"
 @email: "owuordickson@gmail.com"
 @created: "12 July 2019"
-@modified: "17 Feb 2021"
+@modified: "05 Mar 2021"
 
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
@@ -14,31 +14,28 @@ Breath-First Search for gradual patterns (ACO-GRAANK)
 import h5py
 import numpy as np
 from algorithms.common.gp_v4 import GI, GP
-from algorithms.common.dataset_v7 import Dataset
+from algorithms.common.dataset_v8 import Dataset
 
 
 class GradACO:
 
-    def __init__(self, f_path, chunks, min_supp):
-        self.d_set = Dataset(f_path, chunks, min_supp)
+    def __init__(self, f_path, c_size, min_supp):
+        self.thd_supp = min_supp
+        self.chunk_size = c_size
+        self.d_set = Dataset(f_path)
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
         self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
-        # print(self.d)
+        print(self.d)
+        print(self.attr_keys)
+        print("***\n")
 
     def generate_d(self):
-        # 1a. Fetch valid attribute keys
-        h5f = h5py.File(self.d_set.h5_file, 'r+')
-        bin_grp = h5f['dataset/rank_bins/']
-        attr_keys = list(bin_grp.keys())
-
-        # 1b. Retrieve/Generate distance matrix (d)
-        grp = 'dataset/d_matrix/'
-        if grp in h5f:
-            # 1b. Fetch valid bins group
-            d = h5f[grp][:]
-            h5f.close()
-            return d, attr_keys
+        # 1. Fetch valid attribute keys
+        attr_keys = []
+        for a in self.d_set.attr_cols:
+            attr_keys.append(GI(a, '+').as_string())
+            attr_keys.append(GI(a, '-').as_string())
 
         # 2. Initialize an empty d-matrix
         n = len(attr_keys)
@@ -51,22 +48,8 @@ class GradACO:
                     # 2a. Ignore similar attributes (+ or/and -)
                     continue
                 else:
-                    bin_1 = bin_grp[gi_1.as_string()]  # v_bins[i][1]
-                    bin_2 = bin_grp[gi_2.as_string()]  # v_bins[j][1]
-                    # Cumulative sum of all segments for 2x2 (all attributes) gradual items
-                    # 2b. calculate sum from bin ranks (in chunks)
-                    bin_sum = 0
-                    for k in list(bin_1.keys()):
-                        try:
-                            if bin_1[k][:].size > 0 and bin_2[k][:].size > 0:
-                                bin_sum += np.sum(np.multiply(bin_1[k][:], bin_2[k][:]))
-                        except KeyError:
-                            continue
-                    d[i][j] += bin_sum
+                    d[i][j] = 1
 
-        grp = 'dataset/d_matrix'
-        h5f.create_dataset(grp, data=d, chunks=True, compression="gzip", compression_opts=9, shuffle=True)
-        h5f.close()
         return d, attr_keys
 
     def run_ant_colony(self):
