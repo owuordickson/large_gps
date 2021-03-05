@@ -150,6 +150,54 @@ class GradACO:
         min_supp = self.thd_supp
         # n = self.d_set.row_count
         gen_pattern = GP()
+        cols = [gi.attribute_col for gi in pattern.gradual_items]
+
+        # Execute binary rank
+        print(pattern.to_string())
+        n = 0
+        bin_sum = 0
+        skip = False
+        for chunk_1 in self.d_set.read_csv_data(cols, self.chunk_size):
+            n += chunk_1.values.shape[0]
+            for chunk_2 in self.d_set.read_csv_data(cols, self.chunk_size):
+                print(chunk_1.values)
+                print(chunk_2.values)
+                print("\n")
+                # print(chunk_2.values[:, 0])
+                rank_1 = None
+                for i in range(len(pattern.gradual_items)):
+                    gi = pattern.gradual_items[i]
+                    if i == 0:
+                        chunk_1.iloc
+                        if gi.is_decrement():
+                            rank_1 = chunk_1.values[:, gi.attribute_col] > chunk_2.values[:, gi.attribute_col][:, np.newaxis]
+                        else:
+                            rank_1 = chunk_1.values[:, gi.attribute_col] < chunk_2.values[:, gi.attribute_col][:, np.newaxis]
+                        gi.rank_sum += np.sum(rank_1)
+                        if gi.rank_sum < 0.5:
+                            break
+                        else:
+                            if (not skip) and (not gen_pattern.contains_attr(gi)):
+                                gen_pattern.add_gradual_item(gi)
+                    else:
+                        if gi.is_decrement():
+                            rank_2 = chunk_1.values[:, gi.attribute_col] > chunk_2.values[:, gi.attribute_col][:, np.newaxis]
+                        else:
+                            rank_2 = chunk_1.values[:, gi.attribute_col] < chunk_2.values[:, gi.attribute_col][:, np.newaxis]
+                        gi.rank_sum += np.sum(rank_2)
+                        if gi.rank_sum < 0.5:
+                            continue
+                        else:
+                            bin_sum += np.sum(np.multiply(rank_1, rank_2))
+                            if (bin_sum > 0) and (not skip) and (not gen_pattern.contains_attr(gi)):
+                                gen_pattern.add_gradual_item(gi)
+                # skip = True
+        print(gen_pattern.to_string())
+        print("---\n")
+
+        if self.d_set.row_count == 0:
+            self.d_set.row_count = n
+        # Check support of each bin_rank
 
         if len(gen_pattern.gradual_items) <= 1:
             return pattern

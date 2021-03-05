@@ -2,10 +2,10 @@
 """
 @author: "Dickson OWUOR"
 @credits: "Anne LAURENT and Joseph ORERO"
-@version: "4.2"
+@version: "4.4"
 @email: "owuordickson@gmail.com"
 @created: "20 May 2020"
-@modified: "17 Feb 2021"
+@modified: "05 Mar 2021"
 
 GP: Gradual Pattern
 TGP: Temporal Gradual Pattern
@@ -21,6 +21,7 @@ class GI:
         self.symbol = symbol
         self.gradual_item = np.array((attr_col, symbol), dtype='i, S1')
         self.tuple = tuple([attr_col, symbol])
+        self.rank_sum = 0
 
     def inv(self):
         if self.symbol == '+':

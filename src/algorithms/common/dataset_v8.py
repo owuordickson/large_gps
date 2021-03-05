@@ -46,12 +46,13 @@ class Dataset:
             # else:
             #    self.no_bins = False
         else:
-            self.csv_file = file_path
+            # self.csv_file = file_path
             # self.thd_supp = min_sup
             # self.equal = eq
             # self.chunk_size = c_size
             self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
             self.attr_cols = self.get_attr_cols()
+        self.csv_file = file_path
         self.row_count = 0  # TO BE UPDATED
         self.used_chunks = 0
         self.skipped_chunks = 0
@@ -73,12 +74,12 @@ class Dataset:
         h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count]))
         h5f.close()
 
-    def read_csv_data(self, col, c_size):
+    def read_csv_data(self, cols, c_size):
         if self.titles.dtype is np.int32:
-            chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=[col], chunksize=c_size, header=None,
+            chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=cols, chunksize=c_size, header=None,
                                 engine='python')
         else:
-            chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=[col], chunksize=c_size, engine='python')
+            chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=cols, chunksize=c_size, engine='python')
         return chunk
 
     def print_header(self):
