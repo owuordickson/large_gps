@@ -157,9 +157,11 @@ class GradACO:
         n = 0
         bin_sum = 0
         skip = False
+        print(self.d_set.titles.dtype)
         for chunk_1 in self.d_set.read_csv_data(cols, self.chunk_size):
             n += chunk_1.values.shape[0]
             for chunk_2 in self.d_set.read_csv_data(cols, self.chunk_size):
+                print(chunk_1.columns.tolist())
                 print(chunk_1.values)
                 print(chunk_2.values)
                 print("\n")
@@ -167,12 +169,15 @@ class GradACO:
                 rank_1 = None
                 for i in range(len(pattern.gradual_items)):
                     gi = pattern.gradual_items[i]
+                    col_name = self.d_set.titles[np.where(self.d_set.titles['key'] == gi.attribute_col)][0][1].decode()
+                    # col = chunk_1.columns.get_loc(col_name)
+                    print(col_name + str(chunk_1[col_name].values))
                     if i == 0:
-                        chunk_1.iloc
+                        # print(chunk_1.columns.tolist())
                         if gi.is_decrement():
-                            rank_1 = chunk_1.values[:, gi.attribute_col] > chunk_2.values[:, gi.attribute_col][:, np.newaxis]
+                            rank_1 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
-                            rank_1 = chunk_1.values[:, gi.attribute_col] < chunk_2.values[:, gi.attribute_col][:, np.newaxis]
+                            rank_1 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
                         gi.rank_sum += np.sum(rank_1)
                         if gi.rank_sum < 0.5:
                             break
@@ -181,9 +186,9 @@ class GradACO:
                                 gen_pattern.add_gradual_item(gi)
                     else:
                         if gi.is_decrement():
-                            rank_2 = chunk_1.values[:, gi.attribute_col] > chunk_2.values[:, gi.attribute_col][:, np.newaxis]
+                            rank_2 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
-                            rank_2 = chunk_1.values[:, gi.attribute_col] < chunk_2.values[:, gi.attribute_col][:, np.newaxis]
+                            rank_2 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
                         gi.rank_sum += np.sum(rank_2)
                         if gi.rank_sum < 0.5:
                             continue

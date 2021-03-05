@@ -35,30 +35,15 @@ class Dataset:
             self.attr_cols = h5f['dataset/attr_cols'][:]
             size = h5f['dataset/size_arr'][:]
             self.col_count = size[0]
-            # self.row_count = size[1]
-            # valid_count = size[2]
-            # self.used_chunks = size[3]
-            # self.skipped_chunks = size[4]
             h5f.close()
-            # self.thd_supp = min_sup
-            # if valid_count < 3:
-            #    self.no_bins = True
-            # else:
-            #    self.no_bins = False
         else:
-            # self.csv_file = file_path
-            # self.thd_supp = min_sup
-            # self.equal = eq
-            # self.chunk_size = c_size
             self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
             self.attr_cols = self.get_attr_cols()
         self.csv_file = file_path
         self.row_count = 0  # TO BE UPDATED
         self.used_chunks = 0
         self.skipped_chunks = 0
-        self.save_to_hdf5()
-        # self.no_bins = False
-        # self.init_gp_attributes()
+        # self.save_to_hdf5()
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)
@@ -107,15 +92,19 @@ class Dataset:
                 print("Header titles fetched from CSV file")
                 # 2. Get table headers
                 if header_row[0].replace('.', '', 1).isdigit() or header_row[0].isdigit():
-                    titles = np.arange(len(header_row))
+                    # titles = np.arange(len(header_row))
+                    keys = np.arange(len(header_row))
+                    values = np.array(keys, dtype='S')
                 else:
                     if header_row[1].replace('.', '', 1).isdigit() or header_row[1].isdigit():
-                        titles = np.arange(len(header_row))
+                        # titles = np.arange(len(header_row))
+                        keys = np.arange(len(header_row))
+                        values = np.array(keys, dtype='S')
                     else:
                         # titles = self.convert_data_to_array(data, has_title=True)
                         keys = np.arange(len(header_row))
                         values = np.array(header_row, dtype='S')
-                        titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
+                titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
                 del header_row
                 gc.collect()
                 return titles, titles.size, Dataset.get_time_cols(df.values)
