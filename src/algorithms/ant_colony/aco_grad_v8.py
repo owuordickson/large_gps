@@ -11,7 +11,7 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
-import h5py
+# import h5py
 import numpy as np
 from algorithms.common.gp_v4 import GI, GP
 from algorithms.common.dataset_v8 import Dataset
@@ -53,20 +53,17 @@ class GradACO:
         return d, attr_keys
 
     def run_ant_colony(self):
-        min_supp = self.d_set.thd_supp
+        min_supp = self.thd_supp
         d = self.d
-        a = self.d_set.row_count
+        # a = self.d_set.row_count
         winner_gps = list()  # subsets
         loser_gps = list()  # supersets
         repeated = 0
         it_count = 0
 
-        if self.d_set.no_bins:
-            return []
-
         # 1. Remove d[i][j] < frequency-count of min_supp
-        fr_count = ((min_supp * a * (a - 1)) / 2)
-        d[d < fr_count] = 0
+        # fr_count = ((min_supp * a * (a - 1)) / 2)
+        # d[d < fr_count] = 0
 
         # 2. Calculating the visibility of the next city
         # visibility(i,j)=1/d(i,j)
@@ -150,44 +147,10 @@ class GradACO:
         return p_matrix
 
     def validate_gp(self, pattern):
-        # pattern = [('2', '+'), ('4', '+')]
-        min_supp = self.d_set.thd_supp
-        n = self.d_set.row_count
+        min_supp = self.thd_supp
+        # n = self.d_set.row_count
         gen_pattern = GP()
-        bin_1 = None
 
-        h5f = h5py.File(self.d_set.h5_file, 'r+')
-        bin_grp = h5f['dataset/rank_bins/']
-
-        for gi in pattern.gradual_items:
-            if bin_1 is None:
-                bin_1 = bin_grp[gi.as_string()]
-                gen_pattern.add_gradual_item(gi)
-            else:
-                bin_2 = bin_grp[gi.as_string()]
-                bin_sum = 0
-                # tmp_bin = []
-                for k in list(bin_2.keys()):
-                    try:
-                        if bin_1[k][:].size > 0 and bin_2[k][:].size > 0:
-                            bin_prod = np.multiply(bin_1[k][:], bin_2[k][:])
-                            bin_sum += np.sum(bin_prod)
-                            # tmp_bin.append(bin_prod)
-                            grp = 'dataset/rank_bins/tmp/' + '/' + str(k)
-                            if grp in h5f:
-                                del h5f[grp]
-                            h5f.create_dataset(grp, data=bin_prod)
-                    except KeyError:
-                        continue
-
-                supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-                if supp >= min_supp:
-                    # bin_1 = tmp_bin.copy()
-                    bin_1 = h5f['dataset/rank_bins/tmp/']
-                    gen_pattern.add_gradual_item(gi)
-                    gen_pattern.set_support(supp)
-
-        h5f.close()
         if len(gen_pattern.gradual_items) <= 1:
             return pattern
         else:
