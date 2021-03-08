@@ -164,7 +164,6 @@ class GradACO:
                 print(chunk_1.columns.tolist())
                 print(chunk_1.values)
                 print(chunk_2.values)
-                print("\n")
                 # print(chunk_2.values[:, 0])
                 rank_1 = None
                 for i in range(len(pattern.gradual_items)):
@@ -203,6 +202,7 @@ class GradACO:
                             bin_sum += np.sum(np.multiply(rank_1, rank_2))
                             if (bin_sum > 0) and (not skip) and (not gen_pattern.contains_attr(gi)):
                                 gen_pattern.add_gradual_item(gi)
+                    print("\n")
                 # skip = True
         print(gen_pattern.to_string())
         print("---\n")
