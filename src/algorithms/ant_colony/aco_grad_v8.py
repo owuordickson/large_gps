@@ -168,15 +168,16 @@ class GradACO:
                 # print(chunk_2.values[:, 0])
                 rank_1 = None
                 for i in range(len(pattern.gradual_items)):
+                    # Get gradual item
                     gi = pattern.gradual_items[i]
 
                     # Get column name
                     try:
+                        chunk_1.columns.tolist()[0].decode()
                         col_name = self.d_set.titles[gi.attribute_col][1]
-                        print(str(col_name) + str(chunk_1[col_name].values))
-                    except KeyError:
+                    except AttributeError:
                         col_name = self.d_set.titles[gi.attribute_col][1].decode()
-                        print(str(col_name) + str(chunk_1[col_name].values))
+                    print(str(col_name) + str(chunk_1[col_name].values))
 
                     if i == 0:
                         # print(chunk_1.columns.tolist())
