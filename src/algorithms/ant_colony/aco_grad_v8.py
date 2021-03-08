@@ -26,9 +26,9 @@ class GradACO:
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
         self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
-        print(self.d)
-        print(self.attr_keys)
-        print("***\n")
+        # print(self.d)
+        # print(self.attr_keys)
+        # print("***\n")
 
     def generate_d(self):
         # 1. Fetch valid attribute keys
@@ -79,7 +79,7 @@ class GradACO:
 
         # 4. Iterations for ACO
         # while repeated < 1:
-        while it_count < 2:
+        while it_count < 10:
             rand_gp, pheromones = self.generate_aco_gp(pheromones)
             if len(rand_gp.gradual_items) > 1:
                 # print(rand_gp.get_pattern())
@@ -162,9 +162,9 @@ class GradACO:
         for chunk_1 in self.d_set.read_csv_data(cols, self.chunk_size):
             n += chunk_1.values.shape[0]
             for chunk_2 in self.d_set.read_csv_data(cols, self.chunk_size):
-                print(chunk_1.columns.tolist())
-                print(chunk_1.values)
-                print(chunk_2.values)
+                # print(chunk_1.columns.tolist())
+                # print(chunk_1.values)
+                # print(chunk_2.values)
                 # print(chunk_2.values[:, 0])
                 tmp_sum = 0
                 for i in range(len(pattern.gradual_items)):
@@ -177,11 +177,13 @@ class GradACO:
                         col_name = self.d_set.titles[gi.attribute_col][1]
                     except AttributeError:
                         col_name = self.d_set.titles[gi.attribute_col][1].decode()
-                    print(str(col_name) + str(chunk_1[col_name].values))
+                    # print(str(col_name) + str(chunk_1[col_name].values))
+                    # print(str(col_name) + str(chunk_2[col_name].values))
 
-                    if i in skip_columns:
-                        continue
-                    elif len(gen_pattern.gradual_items) <= 0:
+                    # if i in skip_columns:
+                    #    continue
+                    # elif len(gen_pattern.gradual_items) <= 0:
+                    if len(gen_pattern.gradual_items) <= 0:
                         # print(chunk_1.columns.tolist())
                         if gi.is_decrement():
                             rank_1 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
@@ -190,8 +192,9 @@ class GradACO:
                         gi.rank_sum += np.sum(rank_1)
                         if gi.rank_sum <= 0:
                             skip_columns.append(i)
-                            break
+                            continue
                         else:
+                            # print(gi.to_string() + str(rank_1))
                             gen_pattern.add_gradual_item(gi)
                     else:
                         if gi.is_decrement():
@@ -199,16 +202,23 @@ class GradACO:
                         else:
                             rank_2 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
                         gi.rank_sum += np.sum(rank_2)
+                        # print(gi.to_string() + str(rank_2))
                         if gi.rank_sum <= 0:
                             skip_columns.append(i)
+                            # if gen_pattern.contains(gi):
+                            #    gen_pattern.gradual_items.remove(gi)
                             continue
                         else:
                             tmp_rank = np.multiply(rank_1, rank_2)
-                            if np.sum(tmp_rank) > 0:  # and (not gen_pattern.contains(gi)):
-                                tmp_sum = np.sum(tmp_rank)
+                            addition = np.sum(tmp_rank)
+                            if addition > 0:
+                                tmp_sum = addition
                                 rank_1 = tmp_rank
                                 if not gen_pattern.contains(gi):
+                                    print(gi.to_string() + " added to pattern")
+                                    print(tmp_sum)
                                     gen_pattern.add_gradual_item(gi)
+                                    print(gen_pattern.to_string())
                     print("\n")
                 bin_sum += tmp_sum
 
