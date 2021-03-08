@@ -35,9 +35,11 @@ class Dataset:
             self.attr_cols = h5f['dataset/attr_cols'][:]
             size = h5f['dataset/size_arr'][:]
             self.col_count = size[0]
+            self.has_titles = size[1]
             h5f.close()
         else:
-            self.titles, self.col_count, self.time_cols = Dataset.read_csv_header(file_path)
+            self.has_titles, self.titles, self.time_cols = Dataset.read_csv_header(file_path)
+            self.col_count = self.titles.shape[0]
             self.attr_cols = self.get_attr_cols()
         self.csv_file = file_path
         self.row_count = 0  # TO BE UPDATED
@@ -56,13 +58,14 @@ class Dataset:
         h5f.create_dataset('dataset/titles', data=self.titles)
         h5f.create_dataset('dataset/time_cols', data=self.time_cols.astype('u1'))
         h5f.create_dataset('dataset/attr_cols', data=self.attr_cols.astype('u1'))
-        h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count]))
+        h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count, self.has_titles]))
         h5f.close()
 
     def read_csv_data(self, cols, c_size):
-        if self.titles.dtype is np.int32:
-            chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=cols, chunksize=c_size, header=None,
-                                engine='python')
+        if not self.has_titles:
+            col_names = self.titles[:, 1]
+            chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=cols, chunksize=c_size, names=col_names,
+                                header=None, engine='python')
         else:
             chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=cols, chunksize=c_size, engine='python')
         return chunk
@@ -70,18 +73,13 @@ class Dataset:
     def print_header(self):
         str_header = "Header Columns/Attributes\n-------------------------\n"
         for txt in self.titles:
-            try:
-                str_header += (str(txt.key) + '. ' + str(txt.value.decode()) + '\n')
-            except AttributeError:
-                try:
-                    str_header += (str(txt[0]) + '. ' + str(txt[1].decode()) + '\n')
-                except IndexError:
-                    str_header += (str(txt) + '\n')
+            str_header += (str(txt[0]) + '. ' + str(txt[1].decode()) + '\n')
         return str_header
 
     @staticmethod
     def read_csv_header(file):
         try:
+            has_titles = 0
             df = pd.read_csv(file, sep="[;,' '\t]", engine='python', nrows=1)
             header_row = df.columns.tolist()
 
@@ -91,18 +89,22 @@ class Dataset:
             else:
                 print("Header titles fetched from CSV file")
                 # 2. Get table headers
+                keys = np.arange(len(header_row))
                 if header_row[0].replace('.', '', 1).isdigit() or header_row[0].isdigit():
-                    titles = np.arange(len(header_row))
+                    tmp_vals = ['column_'+str(x) for x in keys]
+                    values = np.array(tmp_vals, dtype='S')
                 else:
                     if header_row[1].replace('.', '', 1).isdigit() or header_row[1].isdigit():
-                        titles = np.arange(len(header_row))
+                        tmp_vals = ['column_' + str(x) for x in keys]
+                        values = np.array(tmp_vals, dtype='S')
                     else:
-                        keys = np.arange(len(header_row))
                         values = np.array(header_row, dtype='S')
-                        titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
+                        has_titles = 1
+                # titles = np.rec.fromarrays((keys, values), names=('key', 'value'))
+                titles = np.column_stack((keys.astype(np.object), values))
                 del header_row
                 gc.collect()
-                return titles, titles.size, Dataset.get_time_cols(df.values)
+                return has_titles, titles, Dataset.get_time_cols(df.values)
         except Exception as error:
             print("Unable to read 1st line of CSV file")
             raise Exception("CSV file read error. " + str(error))
