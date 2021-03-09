@@ -225,7 +225,7 @@ class GradACO:
                                     print(gen_pattern.to_string())
 
                                 for tmp_gi in gen_pattern.gradual_items:
-                                    tmp_gi.rank_sum += tmp_sum
+                                    tmp_gi.rank_sum += tmp_add
                                 # else:
                                 #    idx = gen_pattern.get_index(gi)
                                 #    gen_pattern.gradual_items[idx].rank_sum += tmp_sum
