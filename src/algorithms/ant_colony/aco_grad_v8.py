@@ -191,37 +191,44 @@ class GradACO:
                             rank_1 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
                             rank_1 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
-                        gi.rank_avg += np.mean(rank_1)
-                        if gi.rank_avg <= 0.5:
+                        rank_sum = np.sum(rank_1)
+                        if rank_sum <= 0:
                             skip_columns.append(i)
                             continue
                         else:
                             # print(gi.to_string() + str(rank_1))
+                            gi.rank_sum = rank_sum
                             gen_pattern.add_gradual_item(gi)
                     else:
                         if gi.is_decrement():
                             rank_2 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
                             rank_2 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
-                        gi.rank_avg += np.mean(rank_2)
+                        rank_sum = np.sum(rank_2)
                         # print(gi.to_string() + str(rank_2))
-                        if gi.rank_avg <= 0.5:
+                        if rank_sum <= 0:
                             skip_columns.append(i)
                             # if gen_pattern.contains(gi):
                             #    gen_pattern.gradual_items.remove(gi)
                             continue
                         else:
                             tmp_rank = np.multiply(rank_1, rank_2)
-                            tmp_avg = np.mean(tmp_rank)
+                            tmp_add = np.sum(tmp_rank)
                             # print(str(rank_1) + ' + ' + str(rank_2) + ' = ' + str(tmp_rank))
-                            if tmp_avg >= 0.5:
-                                tmp_sum += np.sum(tmp_rank)
+                            if tmp_add > 0:
+                                tmp_sum = tmp_add  # np.sum(tmp_rank)
                                 rank_1 = tmp_rank
                                 if not gen_pattern.contains(gi):
                                     gen_pattern.add_gradual_item(gi)
                                     print(gi.to_string() + " added to pattern")
                                     print(tmp_sum)
                                     print(gen_pattern.to_string())
+
+                                for tmp_gi in gen_pattern.gradual_items:
+                                    tmp_gi.rank_sum += tmp_sum
+                                # else:
+                                #    idx = gen_pattern.get_index(gi)
+                                #    gen_pattern.gradual_items[idx].rank_sum += tmp_sum
                             # else:
                             #    if gen_pattern.contains(gi):
                             #        gen_pattern.gradual_items.remove(gi)
@@ -237,8 +244,10 @@ class GradACO:
             gen_pattern.set_support(supp)
 
         print(gen_pattern.to_string())
-        print(bin_sum)
-        print(supp)
+        for gi in gen_pattern.gradual_items:
+            print(gi.to_string() + ' = ' + str(gi.rank_sum))
+        # print(bin_sum)
+        # print(supp)
         print("---\n")
 
         if len(gen_pattern.gradual_items) <= 1:

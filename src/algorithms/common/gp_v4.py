@@ -21,7 +21,10 @@ class GI:
         self.symbol = symbol
         self.gradual_item = np.array((attr_col, symbol), dtype='i, S1')
         self.tuple = tuple([attr_col, symbol])
-        self.rank_avg = 0
+        self.rank_sum = 0
+
+    def add_rank_sum(self, count):
+        self.rank_sum = count
 
     def inv(self):
         if self.symbol == '+':
@@ -115,6 +118,13 @@ class GP:
             syms.append(gi[1])
         return attrs, syms
 
+    def get_index(self, gi):
+        for i in range(len(self.gradual_items)):
+            gi_obj = self.gradual_items[i]
+            if (gi.symbol == gi_obj.symbol) and (gi.attribute_col == gi_obj.attribute_col):
+                return i
+        return -1
+
     def inv_pattern(self):
         pattern = list()
         for gi in self.gradual_items:
@@ -124,9 +134,8 @@ class GP:
     def contains(self, gi):
         if gi is None:
             return False
-        for gi_obj in self.gradual_items:
-            if (gi.symbol == gi_obj.symbol) and (gi.attribute_col == gi_obj.attribute_col):
-                return True
+        if gi in self.gradual_items:
+            return True
         return False
 
     def contains_attr(self, gi):
