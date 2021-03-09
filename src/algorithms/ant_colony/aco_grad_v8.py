@@ -166,8 +166,10 @@ class GradACO:
                 # print(chunk_1.values)
                 # print(chunk_2.values)
                 # print(chunk_2.values[:, 0])
-                tmp_sum = 0
+                # tmp_sum = 0
                 for i in range(len(pattern.gradual_items)):
+                    tmp_sum = 0
+
                     # Get gradual item
                     gi = pattern.gradual_items[i]
 
@@ -189,8 +191,8 @@ class GradACO:
                             rank_1 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
                             rank_1 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
-                        gi.rank_sum += np.sum(rank_1)
-                        if gi.rank_sum <= 0:
+                        gi.rank_avg += np.mean(rank_1)
+                        if gi.rank_avg <= 0.5:
                             skip_columns.append(i)
                             continue
                         else:
@@ -201,24 +203,29 @@ class GradACO:
                             rank_2 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
                             rank_2 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
-                        gi.rank_sum += np.sum(rank_2)
+                        gi.rank_avg += np.mean(rank_2)
                         # print(gi.to_string() + str(rank_2))
-                        if gi.rank_sum <= 0:
+                        if gi.rank_avg <= 0.5:
                             skip_columns.append(i)
                             # if gen_pattern.contains(gi):
                             #    gen_pattern.gradual_items.remove(gi)
                             continue
                         else:
                             tmp_rank = np.multiply(rank_1, rank_2)
-                            addition = np.sum(tmp_rank)
-                            if addition > 0:
-                                tmp_sum = addition
+                            tmp_avg = np.mean(tmp_rank)
+                            # print(str(rank_1) + ' + ' + str(rank_2) + ' = ' + str(tmp_rank))
+                            if tmp_avg >= 0.5:
+                                tmp_sum += np.sum(tmp_rank)
                                 rank_1 = tmp_rank
                                 if not gen_pattern.contains(gi):
+                                    gen_pattern.add_gradual_item(gi)
                                     print(gi.to_string() + " added to pattern")
                                     print(tmp_sum)
-                                    gen_pattern.add_gradual_item(gi)
                                     print(gen_pattern.to_string())
+                            # else:
+                            #    if gen_pattern.contains(gi):
+                            #        gen_pattern.gradual_items.remove(gi)
+                            #        print(gi.to_string() + " removed from pattern")
                     print("\n")
                 bin_sum += tmp_sum
 

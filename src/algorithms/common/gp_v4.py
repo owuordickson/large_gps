@@ -21,7 +21,7 @@ class GI:
         self.symbol = symbol
         self.gradual_item = np.array((attr_col, symbol), dtype='i, S1')
         self.tuple = tuple([attr_col, symbol])
-        self.rank_sum = 0
+        self.rank_avg = 0
 
     def inv(self):
         if self.symbol == '+':
