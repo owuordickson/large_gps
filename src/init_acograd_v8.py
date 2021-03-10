@@ -20,7 +20,6 @@ Description:
 
 import sys
 from optparse import OptionParser
-# from common.profile_mem import Profile
 from algorithms.ant_colony.aco_grad_v8 import GradACO
 
 
@@ -54,9 +53,6 @@ def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
         for gp in list_gp:
             wr_line += (str(gp.to_string()) + ' : >= ' + str(gp.support) + '\n')
 
-        # wr_line += "\nPheromone Matrix\n"
-        # wr_line += str(ac.p_matrix)
-        # ac.plot_pheromone_matrix()
         return wr_line
     except ArithmeticError as error:
         wr_line = "Failed: " + str(error)

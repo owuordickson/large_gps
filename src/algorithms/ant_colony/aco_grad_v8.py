@@ -6,12 +6,11 @@
 @version: "8.0"
 @email: "owuordickson@gmail.com"
 @created: "12 July 2019"
-@modified: "05 Mar 2021"
+@modified: "10 Mar 2021"
 
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 """
-# import h5py
 import numpy as np
 from algorithms.common.gp_v4 import GI, GP
 from algorithms.common.dataset_v8 import Dataset
