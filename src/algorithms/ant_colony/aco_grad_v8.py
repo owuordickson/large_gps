@@ -10,6 +10,11 @@
 
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
+Changes
+-------
+1. Initiates reading of CSV file in chunks
+2. Calculates Binary Ranks and Multiplication of the Binaries
+
 """
 import numpy as np
 from algorithms.common.gp_v4 import GI, GP

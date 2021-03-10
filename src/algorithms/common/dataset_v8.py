@@ -11,6 +11,7 @@
 Changes
 -------
 1. Chunks CSV file read
+2. Transfers calculations of Ranks to ACO_GRAD class
 
 """
 import gc
