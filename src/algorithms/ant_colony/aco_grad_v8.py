@@ -108,6 +108,7 @@ class GradACO:
                     repeated += 1
             it_count += 1
         self.iteration_count = it_count
+        print(d)
         return winner_gps
 
     def generate_aco_gp(self, p_matrix):
@@ -249,6 +250,13 @@ class GradACO:
                         gen_pattern.add_gradual_item(gen_gi)
                 gen_pattern.set_support(supp)
 
+        # Update invalid attributes/ columns
+        for key, value in sum_dict.items():
+            supp = float(value) / float(n * (n - 1.0) / 2.0)
+            if supp <= 0:
+                inv_gi = GI.parse_gi(key)
+                idx = self.attr_keys.index(inv_gi.as_string())
+                self.d[:, idx] = 0
         print(pattern.to_string())
         print(gen_pattern.to_string())
         print(gen_gp_dict)
