@@ -167,6 +167,7 @@ class GradACO:
                 # print(chunk_2.values)
                 # print(chunk_2.values[:, 0])
                 # tmp_sum = 0
+                start = True
                 for i in range(len(pattern.gradual_items)):
                     tmp_sum = 0
 
@@ -174,13 +175,14 @@ class GradACO:
                     gi = pattern.gradual_items[i]
 
                     # Get column name
-                    try:
-                        chunk_1.columns.tolist()[0].decode()
-                        col_name = self.d_set.titles[gi.attribute_col][1]
-                    except AttributeError:
-                        col_name = self.d_set.titles[gi.attribute_col][1].decode()
-                    # print(str(col_name) + str(chunk_1[col_name].values))
-                    # print(str(col_name) + str(chunk_2[col_name].values))
+                    # try:
+                    #    chunk_1.columns.tolist()[0].decode()
+                    #    col_name = self.d_set.titles[gi.attribute_col][1]
+                    # except AttributeError:
+                    #    col_name = self.d_set.titles[gi.attribute_col][1].decode()
+                    col_name = self.d_set.get_col_name(gi)
+                    print(str(col_name) + str(chunk_1[col_name].values))
+                    print(str(col_name) + str(chunk_2[col_name].values))
 
                     # if i in skip_columns:
                     #    continue
@@ -191,33 +193,48 @@ class GradACO:
                             rank_1 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
                             rank_1 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
-                        rank_sum = np.sum(rank_1)
-                        if rank_sum <= 0:
-                            skip_columns.append(i)
+                        # rank_sum = np.sum(rank_1)
+                        skip_columns.append(i)
+                        if np.sum(rank_1) <= 0:
                             continue
                         else:
                             # print(gi.to_string() + str(rank_1))
-                            gi.rank_sum = rank_sum
+                            # gi.rank_sum = rank_sum
                             gen_pattern.add_gradual_item(gi)
                     else:
                         if gi.is_decrement():
                             rank_2 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
                             rank_2 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
-                        rank_sum = np.sum(rank_2)
+                        # rank_sum = np.sum(rank_2)
                         # print(gi.to_string() + str(rank_2))
-                        if rank_sum <= 0:
+                        if np.sum(rank_2) <= 0:
                             skip_columns.append(i)
                             # if gen_pattern.contains(gi):
                             #    gen_pattern.gradual_items.remove(gi)
                             continue
                         else:
+                            if start:
+                                print("Rank_1 re-initialized")
+                                start = False
+                                gi_1 = gen_pattern.gradual_items[0]
+                                if gi_1.attribute_col == gi.attribute_col:
+                                    rank_1 = rank_2.copy()
+                                    continue
+                                else:
+                                    col_name_1 = self.d_set.get_col_name(gi_1)
+                                    if gi_1.is_decrement():
+                                        rank_1 = chunk_1[col_name_1].values > chunk_2[col_name_1].values[:, np.newaxis]
+                                    else:
+                                        rank_1 = chunk_1[col_name_1].values < chunk_2[col_name_1].values[:, np.newaxis]
+
                             tmp_rank = np.multiply(rank_1, rank_2)
                             tmp_add = np.sum(tmp_rank)
+                            print("Sum of bin AND: " + str(tmp_add))
                             # print(str(rank_1) + ' + ' + str(rank_2) + ' = ' + str(tmp_rank))
                             if tmp_add > 0:
                                 tmp_sum = tmp_add  # np.sum(tmp_rank)
-                                rank_1 = tmp_rank
+                                rank_1 = tmp_rank.copy()
                                 if not gen_pattern.contains(gi):
                                     gen_pattern.add_gradual_item(gi)
                                     print(gi.to_string() + " added to pattern")

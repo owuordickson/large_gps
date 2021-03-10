@@ -52,6 +52,13 @@ class Dataset:
         attr_cols = np.setdiff1d(all_cols, self.time_cols)
         return attr_cols
 
+    def get_col_name(self, gi):
+        if self.has_titles:
+            col_name = self.titles[gi.attribute_col][1].decode()
+        else:
+            col_name = self.titles[gi.attribute_col][1]
+        return col_name
+
     def save_to_hdf5(self):
         # 1. Initiate HDF5 file
         h5f = h5py.File(self.h5_file, 'w')
