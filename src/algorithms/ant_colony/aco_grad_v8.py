@@ -25,9 +25,6 @@ class GradACO:
         self.e_factor = 0.5  # evaporation factor
         self.iteration_count = 0
         self.d, self.attr_keys = self.generate_d()  # distance matrix (d) & attributes corresponding to d
-        # print(self.d)
-        # print(self.attr_keys)
-        # print("***\n")
 
     def generate_d(self):
         # 1. Fetch valid attribute keys

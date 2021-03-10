@@ -25,7 +25,7 @@ import pandas as pd
 
 class Dataset:
 
-    def __init__(self, file_path):  # , c_size, min_sup, eq=False):
+    def __init__(self, file_path):
         self.h5_file = 'app_data/' + str(Path(file_path).stem) + str('.h5')
         if os.path.exists(self.h5_file):
             print("Fetching data from h5 file")
@@ -42,7 +42,7 @@ class Dataset:
             self.col_count = self.titles.shape[0]
             self.attr_cols = self.get_attr_cols()
         self.csv_file = file_path
-        self.row_count = 0  # TO BE UPDATED
+        self.row_count = 0  # TO BE UPDATED in ACO_GRAD class
         self.used_chunks = 0
         self.skipped_chunks = 0
         # self.save_to_hdf5()
