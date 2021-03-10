@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-@author: "Dickson Owuor"
-@credits: "Anne Laurent"
+@author: "Dickson OWUOR"
+@credits: "Anne LAURENT"
 @license: "MIT"
 @version: "8.0"
 @email: "owuordickson@gmail.com"
