@@ -225,34 +225,25 @@ class GradACO:
                                         rank_1 = chunk_1[col_name_1].values < chunk_2[col_name_1].values[:, np.newaxis]
 
                             tmp_rank = np.multiply(rank_1, rank_2)
-                            tmp_add = np.sum(tmp_rank)
-                            # print("Sum of bin AND: " + str(tmp_add))
+                            tmp_sum = np.sum(tmp_rank)
+                            # print("Sum of bin AND: " + str(tmp_sum))
                             # print(str(rank_1) + ' + ' + str(rank_2) + ' = ' + str(tmp_rank))
-                            if tmp_add > 0:
-                                # tmp_sum = tmp_add
+                            if tmp_sum > 0:
                                 rank_1 = tmp_rank.copy()
                                 tmp_pattern.add_gradual_item(gi)
-                                # print('Rank gps: ' + str(tmp_pattern.to_string()))
-                                # if not gen_pattern.contains(gi):
-                                #    gen_pattern.add_gradual_item(gi)
-                                    # print(gi.to_string() + " added to pattern")
-                                    # print(tmp_sum)
-                                    # print(gen_pattern.to_string())
 
                                 str_pat = ''
                                 for tmp_gi in tmp_pattern.gradual_items:
-                                    # idx = gen_pattern.get_index(tmp_gi)
-                                    # gen_pattern.gradual_items[idx].rank_sum += tmp_add
-                                    gen_dict[tmp_gi.as_string()] += tmp_add
+                                    gen_dict[tmp_gi.as_string()] += tmp_sum
                                     if str_pat == '':
                                         str_pat += tmp_gi.as_string()
                                     else:
                                         str_pat += ',' + tmp_gi.as_string()
-                                # gen_items.update({str_pat: tmp_add})
+
                                 try:
-                                    gen_items[str_pat] += tmp_add
+                                    gen_items[str_pat] += tmp_sum
                                 except KeyError:
-                                    gen_items.update({str_pat: tmp_add})
+                                    gen_items.update({str_pat: tmp_sum})
                     # print("\n")
 
         if self.d_set.row_count == 0:
@@ -265,13 +256,11 @@ class GradACO:
                 tmp_lst = key.split(',')
                 for txt_gi in tmp_lst:
                     gen_gi = GI.parse_gi(txt_gi)
-                    if not gen_pattern.contains(gen_gi):
+                    if not gen_pattern.contains_attr(gen_gi):
                         gen_pattern.add_gradual_item(gen_gi)
                 gen_pattern.set_support(supp)
 
         print(gen_pattern.to_string())
-        # print(bin_sum)
-        # print(supp)
         print(gen_dict)
         print(gen_items)
         print("---\n")
