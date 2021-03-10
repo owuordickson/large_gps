@@ -45,7 +45,7 @@ class Dataset:
         self.row_count = 0  # TO BE UPDATED
         self.used_chunks = 0
         self.skipped_chunks = 0
-        # self.save_to_hdf5()
+        self.save_to_hdf5()
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)

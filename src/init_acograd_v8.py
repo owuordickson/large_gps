@@ -3,14 +3,14 @@
 @author: "Dickson Owuor"
 @credits: "Anne Laurent,"
 @license: "MIT"
-@version: "7.0"
+@version: "8.0"
 @email: "owuordickson@gmail.com"
-@created: "17 Feb 2021"
+@created: "10 Mar 2021"
 
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 Usage:
-    $python init_acograd_v7.py -f ../data/DATASET.csv -s 0.5
+    $python init_acograd_v8.py -f ../data/DATASET.csv -s 0.5
 
 Description:
     f -> file path (CSV)
@@ -21,10 +21,10 @@ Description:
 import sys
 from optparse import OptionParser
 # from common.profile_mem import Profile
-from algorithms.ant_colony.aco_grad_v7 import GradACO
+from algorithms.ant_colony.aco_grad_v8 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores, chunk_size=2):
+def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
     try:
         if cores > 1:
             num_cores = cores
@@ -35,7 +35,7 @@ def init_algorithm(f_path, min_supp, cores, chunk_size=2):
         list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
-        wr_line = "Algorithm: ACO-GRAANK (v7.0)\n"
+        wr_line = "Algorithm: ACO-GRAANK BD (v8.0)\n"
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "No. of CPU cores: " + str(num_cores) + '\n'
         wr_line += "No. of (dataset) attributes: " + str(d_set.col_count) + '\n'
@@ -82,7 +82,7 @@ if __name__ == "__main__":
                              dest='file',
                              help='path to file containing csv',
                              # default=None,
-                             default='../data/DATASET.csv',
+                             # default='../data/DATASET.csv',
                              # default='../data/DATASET2.csv',
                              # default='../data/DATASET3.csv',
                              # default='../data/Omnidir.csv',
@@ -90,7 +90,7 @@ if __name__ == "__main__":
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
                              # default='../data/c2k_02k.csv',
-                             # default='../data/Directio_site15k.csv',
+                             default='../data/Directio_site15k.csv',
                              # default='../data/UCI_household_power_consumption500k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',

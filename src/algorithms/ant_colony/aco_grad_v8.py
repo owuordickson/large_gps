@@ -163,6 +163,7 @@ class GradACO:
         for chunk_1 in self.d_set.read_csv_data(cols, self.chunk_size):
             n += chunk_1.values.shape[0]
             for chunk_2 in self.d_set.read_csv_data(cols, self.chunk_size):
+                self.d_set.used_chunks += 1
                 is_restarted = True
                 for i in range(len(pattern.gradual_items)):
                     # Get gradual item

@@ -2,10 +2,10 @@
 """
 @author: "Dickson OWUOR"
 @credits: "Anne LAURENT and Joseph ORERO"
-@version: "4.4"
+@version: "4.6"
 @email: "owuordickson@gmail.com"
 @created: "20 May 2020"
-@modified: "05 Mar 2021"
+@modified: "10 Mar 2021"
 
 GP: Gradual Pattern
 TGP: Temporal Gradual Pattern
