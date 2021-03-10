@@ -24,7 +24,7 @@ from optparse import OptionParser
 from algorithms.ant_colony.aco_grad_v8 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores, chunk_size=2):
+def init_algorithm(f_path, min_supp, cores, chunk_size=6):
     try:
         if cores > 1:
             num_cores = cores
