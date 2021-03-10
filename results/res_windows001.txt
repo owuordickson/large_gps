@@ -7,7 +7,7 @@ Minimum support: 0.5
 No. of CPU cores: 4
 No. of (dataset) attributes: 21
 No. of (dataset) objects: 15402
-No. of (memory) used chunks: 0
+No. of (memory) used chunks: 2560
 No. of (memory) skipped chunks: 0
 No. of (ACO) iterations: 10
 No. of gradual patterns: 6

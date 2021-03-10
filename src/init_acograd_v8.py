@@ -40,6 +40,7 @@ def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
         wr_line += "No. of CPU cores: " + str(num_cores) + '\n'
         wr_line += "No. of (dataset) attributes: " + str(d_set.col_count) + '\n'
         wr_line += "No. of (dataset) objects: " + str(d_set.row_count) + '\n'
+        wr_line += "No. of (memory) chunk size: " + str(chunk_size) + '\n'
         wr_line += "No. of (memory) used chunks: " + str(d_set.used_chunks) + '\n'
         wr_line += "No. of (memory) skipped chunks: " + str(d_set.skipped_chunks) + '\n'
         wr_line += "No. of (ACO) iterations: " + str(ac.iteration_count) + '\n'
@@ -90,8 +91,8 @@ if __name__ == "__main__":
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
                              # default='../data/c2k_02k.csv',
-                             default='../data/Directio_site15k.csv',
-                             # default='../data/UCI_household_power_consumption500k.csv',
+                             # default='../data/Directio_site15k.csv',
+                             default='../data/UCI_household_power_consumption50k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
                              dest='minSup',
