@@ -103,7 +103,7 @@ if __name__ == "__main__":
         (options, args) = optparser.parse_args()
 
         if options.file is None:
-            print("Usage: $python init_acograd_v4.py -f filename.csv ")
+            print("Usage: $python3 init_acograd_v8.py -f filename.csv ")
             sys.exit('System will exit')
         else:
             filePath = options.file
