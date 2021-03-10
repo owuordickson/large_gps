@@ -1,16 +1,17 @@
-C:\Users\dowuor\PycharmProjects\hdf5_gps\venv\Scripts\python.exe C:\Users\dowuor\PycharmProjects\hdf5_gps\src\init_acograd_v7.py
-Fetching data from h5 file
-Run-time: 361.00143575668335 seconds
-Total allocated memory size: 235.4 KiB
-Algorithm: ACO-GRAANK (v7.0)
+C:\Users\dowuor\PycharmProjects\hdf5_gps\venv\Scripts\python.exe C:/Users/dowuor/PycharmProjects/hdf5_gps/src/init_acograd_v8.py
+Header titles fetched from CSV file
+Run-time: 913.1232843399048 seconds
+Total allocated memory size: 301.9 KiB
+Algorithm: ACO-GRAANK BD (v8.0)
 Minimum support: 0.5
 No. of CPU cores: 4
 No. of (dataset) attributes: 9
 No. of (dataset) objects: 46774
-No. of (memory) used chunks: 29508
-No. of (memory) skipped chunks: 1418
-No. of (ACO) iterations: 2
-No. of gradual patterns: 2
+No. of (memory) chunk size: 1000
+No. of (memory) used chunks: 22090
+No. of (memory) skipped chunks: 0
+No. of (ACO) iterations: 10
+No. of gradual patterns: 1
 
 Header Columns/Attributes
 -------------------------
@@ -27,8 +28,7 @@ Header Columns/Attributes
 File: ../data/UCI_household_power_consumption50k.csv
 
 Pattern : Support
-['4+', '2-'] : >= 0.713
-['3-', '2-'] : >= 0.544
+['5-', '4+', '2-'] : >= 0.702
 
 
 Process finished with exit code 0

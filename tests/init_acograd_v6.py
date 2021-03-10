@@ -10,7 +10,7 @@
 Breath-First Search for gradual patterns (ACO-GRAANK)
 
 Usage:
-    $python init_acograd_v4.py -f ../data/DATASET.csv -s 0.5
+    $python init_acograd_v6.py -f ../data/DATASET.csv -s 0.5
 
 Description:
     f -> file path (CSV)
@@ -21,10 +21,10 @@ Description:
 import sys
 from optparse import OptionParser
 # from common.profile_mem import Profile
-from algorithms.ant_colony.aco_grad_h5v6 import GradACO
+from tests.aco_grad_v6 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores, chunks=1):
+def init_algorithm(f_path, min_supp, cores, chunks=5):
     try:
         if cores > 1:
             num_cores = cores
@@ -35,9 +35,9 @@ def init_algorithm(f_path, min_supp, cores, chunks=1):
         list_gp = ac.run_ant_colony()
 
         d_set = ac.d_set
-        wr_line = "Algorithm: ACO-GRAANK HF5 (6.0)\n"
+        wr_line = "Algorithm: ACO-GRAANK (6.0)\n"
         wr_line += "No. of (dataset) attributes: " + str(ac.d_set.col_count) + '\n'
-        wr_line += "No. of (dataset) tuples: " + str(ac.d_set.row_count) + '\n'
+        wr_line += "No. of (dataset) objects: " + str(ac.d_set.row_count) + '\n'
         wr_line += "Minimum support: " + str(min_supp) + '\n'
         wr_line += "Number of cores: " + str(num_cores) + '\n'
         wr_line += "Number of patterns: " + str(len(list_gp)) + '\n'
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         (options, args) = optparser.parse_args()
 
         if options.file is None:
-            print("Usage: $python init_acograd_v4.py -f filename.csv ")
+            print("Usage: $python init_acograd_v6.py -f filename.csv ")
             sys.exit('System will exit')
         else:
             filePath = options.file
