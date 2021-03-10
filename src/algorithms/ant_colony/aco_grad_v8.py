@@ -148,17 +148,14 @@ class GradACO:
 
     def validate_gp(self, pattern):
         min_supp = self.thd_supp
-        # n = self.d_set.row_count
-        gen_pattern = GP()
-        gen_items = {}
+        n = 0
         cols = [gi.attribute_col for gi in pattern.gradual_items]
-        gen_dict = pattern.to_dict()
+        sum_dict = pattern.to_dict()
+
+        gen_pattern = GP()
+        gen_gp_dict = {}
 
         # Execute binary rank
-        print(pattern.to_string())
-        # print(gen_dict)
-        n = 0
-        # bin_sum = 0
         rank_1 = None
         tmp_pattern = GP()
         skip_columns = []
@@ -166,15 +163,8 @@ class GradACO:
         for chunk_1 in self.d_set.read_csv_data(cols, self.chunk_size):
             n += chunk_1.values.shape[0]
             for chunk_2 in self.d_set.read_csv_data(cols, self.chunk_size):
-                # print(chunk_1.columns.tolist())
-                # print(chunk_1.values)
-                # print(chunk_2.values)
-                # print(chunk_2.values[:, 0])
-                # tmp_sum = 0
                 is_restarted = True
                 for i in range(len(pattern.gradual_items)):
-                    # tmp_sum = 0
-
                     # Get gradual item
                     gi = pattern.gradual_items[i]
 
@@ -195,7 +185,6 @@ class GradACO:
                             continue
                         else:
                             # print(gi.to_string() + str(rank_1))
-                            # gen_pattern.add_gradual_item(gi)
                             first_gi = gi
                             tmp_pattern.add_gradual_item(gi)
                     else:
@@ -234,23 +223,23 @@ class GradACO:
 
                                 str_pat = ''
                                 for tmp_gi in tmp_pattern.gradual_items:
-                                    gen_dict[tmp_gi.as_string()] += tmp_sum
+                                    sum_dict[tmp_gi.as_string()] += tmp_sum
                                     if str_pat == '':
                                         str_pat += tmp_gi.as_string()
                                     else:
                                         str_pat += ',' + tmp_gi.as_string()
 
                                 try:
-                                    gen_items[str_pat] += tmp_sum
+                                    gen_gp_dict[str_pat] += tmp_sum
                                 except KeyError:
-                                    gen_items.update({str_pat: tmp_sum})
+                                    gen_gp_dict.update({str_pat: tmp_sum})
                     # print("\n")
 
         if self.d_set.row_count == 0:
             self.d_set.row_count = n
 
         # Check support of each bin_rank
-        for key, value in gen_items.items():
+        for key, value in gen_gp_dict.items():
             supp = float(value) / float(n * (n - 1.0) / 2.0)
             if supp >= min_supp:
                 tmp_lst = key.split(',')
@@ -260,9 +249,10 @@ class GradACO:
                         gen_pattern.add_gradual_item(gen_gi)
                 gen_pattern.set_support(supp)
 
+        print(pattern.to_string())
         print(gen_pattern.to_string())
-        print(gen_dict)
-        print(gen_items)
+        print(gen_gp_dict)
+        print(sum_dict)
         print("---\n")
 
         if len(gen_pattern.gradual_items) <= 1:
