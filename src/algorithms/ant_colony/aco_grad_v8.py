@@ -147,23 +147,30 @@ class GradACO:
         return p_matrix
 
     def validate_gp(self, pattern):
+        # 1a. Initiate minimum support and size of data set (row count)
         min_supp = self.thd_supp
         n = 0
+
+        # 1b. Retrieve columns to be used (from generated pattern)
         cols = [gi.attribute_col for gi in pattern.gradual_items]
         sum_dict = pattern.to_dict()
 
+        # 1c. Initialize empty validated pattern (to be stored as a dict)
         gen_pattern = GP()
         gen_gp_dict = {}
 
-        # Execute binary rank
+        # 2. Execute binary rank for selected columns in chunks (read csv columns in chunks)
         rank_1 = None
         tmp_pattern = GP()
         skip_columns = []
         first_gi = None
         for chunk_1 in self.d_set.read_csv_data(cols, self.chunk_size):
+            # 2a. Count total number of rows
             n += chunk_1.values.shape[0]
             for chunk_2 in self.d_set.read_csv_data(cols, self.chunk_size):
                 self.d_set.used_chunks += 1
+
+                # 2b. For each 2-sets of csv chunks: loop through all columns to determine rank and binary product
                 is_restarted = True
                 for i in range(len(pattern.gradual_items)):
                     # Get gradual item
@@ -235,11 +242,11 @@ class GradACO:
                                 except KeyError:
                                     gen_gp_dict.update({str_pat: tmp_sum})
                     # print("\n")
-
+        # 3. Store row count
         if self.d_set.row_count == 0:
             self.d_set.row_count = n
 
-        # Check support of each bin_rank
+        # 4. Check support of each bin_rank
         for key, value in gen_gp_dict.items():
             supp = float(value) / float(n * (n - 1.0) / 2.0)
             if supp >= min_supp:
@@ -250,7 +257,7 @@ class GradACO:
                         gen_pattern.add_gradual_item(gen_gi)
                 gen_pattern.set_support(supp)
 
-        # Update invalid attributes/ columns
+        # 5. Update invalid attributes/columns in the d_matrix
         for key, value in sum_dict.items():
             supp = float(value) / float(n * (n - 1.0) / 2.0)
             if supp <= 0:
