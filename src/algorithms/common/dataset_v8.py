@@ -60,6 +60,12 @@ class Dataset:
             col_name = self.titles[gi.attribute_col][1]
         return col_name
 
+    def print_header(self):
+        str_header = "Header Columns/Attributes\n-------------------------\n"
+        for txt in self.titles:
+            str_header += (str(txt[0]) + '. ' + str(txt[1].decode()) + '\n')
+        return str_header
+
     def save_to_hdf5(self):
         # 1. Initiate HDF5 file
         h5f = h5py.File(self.h5_file, 'w')
@@ -77,12 +83,6 @@ class Dataset:
         else:
             chunk = pd.read_csv(self.csv_file, sep="[;,' '\t]", usecols=cols, chunksize=c_size, engine='python')
         return chunk
-
-    def print_header(self):
-        str_header = "Header Columns/Attributes\n-------------------------\n"
-        for txt in self.titles:
-            str_header += (str(txt[0]) + '. ' + str(txt[1].decode()) + '\n')
-        return str_header
 
     @staticmethod
     def read_csv_header(file):
