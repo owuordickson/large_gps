@@ -150,10 +150,13 @@ class GradACO:
         min_supp = self.thd_supp
         # n = self.d_set.row_count
         gen_pattern = GP()
+        gen_items = {}
         cols = [gi.attribute_col for gi in pattern.gradual_items]
+        gen_dict = pattern.to_dict()
 
         # Execute binary rank
         print(pattern.to_string())
+        print(gen_dict)
         n = 0
         bin_sum = 0
         rank_1 = None
@@ -176,18 +179,10 @@ class GradACO:
                     gi = pattern.gradual_items[i]
 
                     # Get column name
-                    # try:
-                    #    chunk_1.columns.tolist()[0].decode()
-                    #    col_name = self.d_set.titles[gi.attribute_col][1]
-                    # except AttributeError:
-                    #    col_name = self.d_set.titles[gi.attribute_col][1].decode()
                     col_name = self.d_set.get_col_name(gi)
                     print(str(col_name) + str(chunk_1[col_name].values))
                     print(str(col_name) + str(chunk_2[col_name].values))
 
-                    # if i in skip_columns:
-                    #    continue
-                    # elif len(gen_pattern.gradual_items) <= 0:
                     if len(gen_pattern.gradual_items) <= 0:
                         # print(chunk_1.columns.tolist())
                         start = False
@@ -195,13 +190,11 @@ class GradACO:
                             rank_1 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
                             rank_1 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
-                        # rank_sum = np.sum(rank_1)
                         skip_columns.append(i)
                         if np.sum(rank_1) <= 0:
                             continue
                         else:
                             # print(gi.to_string() + str(rank_1))
-                            # gi.rank_sum = rank_sum
                             gen_pattern.add_gradual_item(gi)
                             tmp_pattern.add_gradual_item(gi)
                     else:
@@ -209,12 +202,9 @@ class GradACO:
                             rank_2 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
                             rank_2 = chunk_1[col_name].values < chunk_2[col_name].values[:, np.newaxis]
-                        # rank_sum = np.sum(rank_2)
                         # print(gi.to_string() + str(rank_2))
                         if np.sum(rank_2) <= 0:
                             skip_columns.append(i)
-                            # if gen_pattern.contains(gi):
-                            #    gen_pattern.gradual_items.remove(gi)
                             continue
                         else:
                             if start:
@@ -238,7 +228,7 @@ class GradACO:
                             print("Sum of bin AND: " + str(tmp_add))
                             # print(str(rank_1) + ' + ' + str(rank_2) + ' = ' + str(tmp_rank))
                             if tmp_add > 0:
-                                tmp_sum = tmp_add  # np.sum(tmp_rank)
+                                tmp_sum = tmp_add
                                 rank_1 = tmp_rank.copy()
                                 tmp_pattern.add_gradual_item(gi)
                                 print('Rank gps: ' + str(tmp_pattern.to_string()))
@@ -248,33 +238,37 @@ class GradACO:
                                     print(tmp_sum)
                                     print(gen_pattern.to_string())
 
+                                str_pat = ''
                                 for tmp_gi in tmp_pattern.gradual_items:
                                     idx = gen_pattern.get_index(tmp_gi)
                                     gen_pattern.gradual_items[idx].rank_sum += tmp_add
-                                # for tmp_gi in gen_pattern.gradual_items:
-                                #    tmp_gi.rank_sum += tmp_add
-                                # else:
-                                #    idx = gen_pattern.get_index(gi)
-                                #    gen_pattern.gradual_items[idx].rank_sum += tmp_sum
-                            # else:
-                            #    if gen_pattern.contains(gi):
-                            #        gen_pattern.gradual_items.remove(gi)
-                            #        print(gi.to_string() + " removed from pattern")
+                                    gen_dict[tmp_gi.as_string()] += tmp_add
+                                    if str_pat == '':
+                                        str_pat += tmp_gi.as_string()
+                                    else:
+                                        str_pat += ',' + tmp_gi.as_string()
+                                # gen_items.update({str_pat: tmp_add})
+                                try:
+                                    gen_items[str_pat] += tmp_add
+                                except KeyError:
+                                    gen_items.update({str_pat: tmp_add})
                     print("\n")
                 bin_sum += tmp_sum
 
         if self.d_set.row_count == 0:
             self.d_set.row_count = n
+
         # Check support of each bin_rank
+        gen_pattern = GP()  # TO BE REMOVED
         supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
         if supp >= min_supp:
             gen_pattern.set_support(supp)
 
         print(gen_pattern.to_string())
-        for gi in gen_pattern.gradual_items:
-            print(gi.to_string() + ' = ' + str(gi.rank_sum))
         # print(bin_sum)
         # print(supp)
+        print(gen_dict)
+        print(gen_items)
         print("---\n")
 
         if len(gen_pattern.gradual_items) <= 1:

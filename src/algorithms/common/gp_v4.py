@@ -23,9 +23,6 @@ class GI:
         self.tuple = tuple([attr_col, symbol])
         self.rank_sum = 0
 
-    def add_rank_sum(self, count):
-        self.rank_sum = count
-
     def inv(self):
         if self.symbol == '+':
             # temp = tuple([self.attribute_col, '-'])
@@ -151,6 +148,12 @@ class GP:
         for item in self.gradual_items:
             pattern.append(item.to_string())
         return pattern
+
+    def to_dict(self):
+        gi_dict = {}
+        for gi in self.gradual_items:
+            gi_dict.update({gi.as_string(): 0})
+        return gi_dict
 
 
 class TimeLag:
