@@ -180,8 +180,8 @@ class GradACO:
 
                     # Get column name
                     col_name = self.d_set.get_col_name(gi)
-                    print(str(col_name) + str(chunk_1[col_name].values))
-                    print(str(col_name) + str(chunk_2[col_name].values))
+                    # print(str(col_name) + str(chunk_1[col_name].values))
+                    # print(str(col_name) + str(chunk_2[col_name].values))
 
                     if len(gen_pattern.gradual_items) <= 0:
                         # print(chunk_1.columns.tolist())
@@ -260,9 +260,15 @@ class GradACO:
 
         # Check support of each bin_rank
         gen_pattern = GP()  # TO BE REMOVED
-        supp = float(bin_sum) / float(n * (n - 1.0) / 2.0)
-        if supp >= min_supp:
-            gen_pattern.set_support(supp)
+        for key, value in gen_items.items():
+            supp = float(value) / float(n * (n - 1.0) / 2.0)
+            if supp >= min_supp:
+                tmp_lst = key.split(',')
+                for txt_gi in tmp_lst:
+                    gen_gi = GI.parse_gi(txt_gi)
+                    if not gen_pattern.contains(gen_gi):
+                        gen_pattern.add_gradual_item(gen_gi)
+                gen_pattern.set_support(supp)
 
         print(gen_pattern.to_string())
         # print(bin_sum)
