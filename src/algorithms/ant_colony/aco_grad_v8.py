@@ -157,6 +157,7 @@ class GradACO:
         n = 0
         bin_sum = 0
         rank_1 = None
+        tmp_pattern = GP()
         skip_columns = []
         # skip = False
         for chunk_1 in self.d_set.read_csv_data(cols, self.chunk_size):
@@ -189,6 +190,7 @@ class GradACO:
                     # elif len(gen_pattern.gradual_items) <= 0:
                     if len(gen_pattern.gradual_items) <= 0:
                         # print(chunk_1.columns.tolist())
+                        start = False
                         if gi.is_decrement():
                             rank_1 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
@@ -201,6 +203,7 @@ class GradACO:
                             # print(gi.to_string() + str(rank_1))
                             # gi.rank_sum = rank_sum
                             gen_pattern.add_gradual_item(gi)
+                            tmp_pattern.add_gradual_item(gi)
                     else:
                         if gi.is_decrement():
                             rank_2 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
@@ -217,7 +220,9 @@ class GradACO:
                             if start:
                                 print("Rank_1 re-initialized")
                                 start = False
+                                tmp_pattern = GP()
                                 gi_1 = gen_pattern.gradual_items[0]
+                                tmp_pattern.add_gradual_item(gi_1)
                                 if gi_1.attribute_col == gi.attribute_col:
                                     rank_1 = rank_2.copy()
                                     continue
@@ -235,14 +240,19 @@ class GradACO:
                             if tmp_add > 0:
                                 tmp_sum = tmp_add  # np.sum(tmp_rank)
                                 rank_1 = tmp_rank.copy()
+                                tmp_pattern.add_gradual_item(gi)
+                                print('Rank gps: ' + str(tmp_pattern.to_string()))
                                 if not gen_pattern.contains(gi):
                                     gen_pattern.add_gradual_item(gi)
                                     print(gi.to_string() + " added to pattern")
                                     print(tmp_sum)
                                     print(gen_pattern.to_string())
 
-                                for tmp_gi in gen_pattern.gradual_items:
-                                    tmp_gi.rank_sum += tmp_add
+                                for tmp_gi in tmp_pattern.gradual_items:
+                                    idx = gen_pattern.get_index(tmp_gi)
+                                    gen_pattern.gradual_items[idx].rank_sum += tmp_add
+                                # for tmp_gi in gen_pattern.gradual_items:
+                                #    tmp_gi.rank_sum += tmp_add
                                 # else:
                                 #    idx = gen_pattern.get_index(gi)
                                 #    gen_pattern.gradual_items[idx].rank_sum += tmp_sum
