@@ -2,12 +2,13 @@
 """
 @author: "Dickson OWUOR"
 @credits: "Anne LAURENT and Joseph ORERO"
-@version: "4.6"
+@version: "4.8"
 @email: "owuordickson@gmail.com"
 @created: "20 May 2020"
 @modified: "10 Mar 2021"
 
-GP: Gradual Pattern
+GI: Gradual Item (0, +)
+GP: Gradual Pattern {(0, +), (1, -), (3, +)}
 TGP: Temporal Gradual Pattern
 
 """
