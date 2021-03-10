@@ -156,13 +156,13 @@ class GradACO:
 
         # Execute binary rank
         print(pattern.to_string())
-        print(gen_dict)
+        # print(gen_dict)
         n = 0
-        bin_sum = 0
+        # bin_sum = 0
         rank_1 = None
         tmp_pattern = GP()
         skip_columns = []
-        # skip = False
+        first_gi = None
         for chunk_1 in self.d_set.read_csv_data(cols, self.chunk_size):
             n += chunk_1.values.shape[0]
             for chunk_2 in self.d_set.read_csv_data(cols, self.chunk_size):
@@ -171,9 +171,9 @@ class GradACO:
                 # print(chunk_2.values)
                 # print(chunk_2.values[:, 0])
                 # tmp_sum = 0
-                start = True
+                is_restarted = True
                 for i in range(len(pattern.gradual_items)):
-                    tmp_sum = 0
+                    # tmp_sum = 0
 
                     # Get gradual item
                     gi = pattern.gradual_items[i]
@@ -183,9 +183,9 @@ class GradACO:
                     # print(str(col_name) + str(chunk_1[col_name].values))
                     # print(str(col_name) + str(chunk_2[col_name].values))
 
-                    if len(gen_pattern.gradual_items) <= 0:
+                    if first_gi is None:
                         # print(chunk_1.columns.tolist())
-                        start = False
+                        is_restarted = False
                         if gi.is_decrement():
                             rank_1 = chunk_1[col_name].values > chunk_2[col_name].values[:, np.newaxis]
                         else:
@@ -195,7 +195,8 @@ class GradACO:
                             continue
                         else:
                             # print(gi.to_string() + str(rank_1))
-                            gen_pattern.add_gradual_item(gi)
+                            # gen_pattern.add_gradual_item(gi)
+                            first_gi = gi
                             tmp_pattern.add_gradual_item(gi)
                     else:
                         if gi.is_decrement():
@@ -207,11 +208,11 @@ class GradACO:
                             skip_columns.append(i)
                             continue
                         else:
-                            if start:
-                                print("Rank_1 re-initialized")
-                                start = False
+                            if is_restarted:
+                                # print("Rank_1 re-initialized")
+                                is_restarted = False
                                 tmp_pattern = GP()
-                                gi_1 = gen_pattern.gradual_items[0]
+                                gi_1 = first_gi
                                 tmp_pattern.add_gradual_item(gi_1)
                                 if gi_1.attribute_col == gi.attribute_col:
                                     rank_1 = rank_2.copy()
@@ -225,23 +226,23 @@ class GradACO:
 
                             tmp_rank = np.multiply(rank_1, rank_2)
                             tmp_add = np.sum(tmp_rank)
-                            print("Sum of bin AND: " + str(tmp_add))
+                            # print("Sum of bin AND: " + str(tmp_add))
                             # print(str(rank_1) + ' + ' + str(rank_2) + ' = ' + str(tmp_rank))
                             if tmp_add > 0:
-                                tmp_sum = tmp_add
+                                # tmp_sum = tmp_add
                                 rank_1 = tmp_rank.copy()
                                 tmp_pattern.add_gradual_item(gi)
-                                print('Rank gps: ' + str(tmp_pattern.to_string()))
-                                if not gen_pattern.contains(gi):
-                                    gen_pattern.add_gradual_item(gi)
-                                    print(gi.to_string() + " added to pattern")
-                                    print(tmp_sum)
-                                    print(gen_pattern.to_string())
+                                # print('Rank gps: ' + str(tmp_pattern.to_string()))
+                                # if not gen_pattern.contains(gi):
+                                #    gen_pattern.add_gradual_item(gi)
+                                    # print(gi.to_string() + " added to pattern")
+                                    # print(tmp_sum)
+                                    # print(gen_pattern.to_string())
 
                                 str_pat = ''
                                 for tmp_gi in tmp_pattern.gradual_items:
-                                    idx = gen_pattern.get_index(tmp_gi)
-                                    gen_pattern.gradual_items[idx].rank_sum += tmp_add
+                                    # idx = gen_pattern.get_index(tmp_gi)
+                                    # gen_pattern.gradual_items[idx].rank_sum += tmp_add
                                     gen_dict[tmp_gi.as_string()] += tmp_add
                                     if str_pat == '':
                                         str_pat += tmp_gi.as_string()
@@ -252,14 +253,12 @@ class GradACO:
                                     gen_items[str_pat] += tmp_add
                                 except KeyError:
                                     gen_items.update({str_pat: tmp_add})
-                    print("\n")
-                bin_sum += tmp_sum
+                    # print("\n")
 
         if self.d_set.row_count == 0:
             self.d_set.row_count = n
 
         # Check support of each bin_rank
-        gen_pattern = GP()  # TO BE REMOVED
         for key, value in gen_items.items():
             supp = float(value) / float(n * (n - 1.0) / 2.0)
             if supp >= min_supp:
