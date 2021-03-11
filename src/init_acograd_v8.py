@@ -23,7 +23,7 @@ from optparse import OptionParser
 from algorithms.ant_colony.aco_grad_v8 import GradACO
 
 
-def init_algorithm(f_path, min_supp, cores, chunk_size=5000):
+def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
     try:
         if cores > 1:
             num_cores = cores
@@ -87,13 +87,14 @@ if __name__ == "__main__":
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
                              # default='../data/c2k_02k.csv',
-                             default='../data/Directio_site15k.csv',
+                             default='../data/c2k.csv',
+                             # default='../data/Directio_site15k.csv',
                              # default='../data/UCI_household_power_consumption500k.csv',
                              type='string')
         optparser.add_option('-s', '--minSupport',
                              dest='minSup',
                              help='minimum support value',
-                             default=0.5,
+                             default=0.1,
                              type='float')
         optparser.add_option('-c', '--cores',
                              dest='numCores',
