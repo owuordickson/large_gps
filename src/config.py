@@ -2,12 +2,10 @@
 
 # Configurations for Gradual Patterns:
 # INITIALIZATIONS = 3
-ALGORITHM = 'aco'
+ALGORITHM = 'aco_ch'  # aco_h5, aco_ch
 MIN_SUPPORT = 0.5
 CPU_CORES = 4
-
-# DATASET = "../../data/DATASET.csv"
-# DATASET = "../../data/hcv_data.csv"
+CHUNK_SIZE = 3
 
 # Uncomment for Main:
 DATASET = "../data/DATASET.csv"
