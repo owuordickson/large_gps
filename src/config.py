@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # Configurations for Gradual Patterns:
-ALGORITHM = 'aco_h5'  # aco_h5, aco_ch
-MIN_SUPPORT = 0.5
+ALGORITHM = 'aco_ch'  # aco_ch, aco_h5
+MIN_SUPPORT = 0.1
 CPU_CORES = 4
 CHUNK_SIZE = 50
 

@@ -15,10 +15,7 @@ Changes
 
 """
 import gc
-import os
-from pathlib import Path
 from dateutil.parser import parse
-import h5py
 import time
 import numpy as np
 import pandas as pd
@@ -27,26 +24,13 @@ import pandas as pd
 class Dataset:
 
     def __init__(self, file_path):
-        self.h5_file = 'app_data/' + str(Path(file_path).stem) + str('.h5')
-        if os.path.exists(self.h5_file):
-            print("Fetching data from h5 file")
-            h5f = h5py.File(self.h5_file, 'r')
-            self.titles = h5f['dataset/titles'][:]
-            self.time_cols = h5f['dataset/time_cols'][:]
-            self.attr_cols = h5f['dataset/attr_cols'][:]
-            size = h5f['dataset/size_arr'][:]
-            self.col_count = size[0]
-            self.has_titles = size[1]
-            h5f.close()
-        else:
-            self.has_titles, self.titles, self.time_cols = Dataset.read_csv_header(file_path)
-            self.col_count = self.titles.shape[0]
-            self.attr_cols = self.get_attr_cols()
+        self.has_titles, self.titles, self.time_cols = Dataset.read_csv_header(file_path)
+        self.col_count = self.titles.shape[0]
+        self.attr_cols = self.get_attr_cols()
         self.csv_file = file_path
         self.row_count = 0  # TO BE UPDATED in ACO_GRAD class
         self.used_chunks = 0
         self.skipped_chunks = 0
-        # self.save_to_hdf5()
 
     def get_attr_cols(self):
         all_cols = np.arange(self.col_count)
@@ -65,15 +49,6 @@ class Dataset:
         for txt in self.titles:
             str_header += (str(txt[0]) + '. ' + str(txt[1].decode()) + '\n')
         return str_header
-
-    def save_to_hdf5(self):
-        # 1. Initiate HDF5 file
-        h5f = h5py.File(self.h5_file, 'w')
-        h5f.create_dataset('dataset/titles', data=self.titles)
-        h5f.create_dataset('dataset/time_cols', data=self.time_cols.astype('u1'))
-        h5f.create_dataset('dataset/attr_cols', data=self.attr_cols.astype('u1'))
-        h5f.create_dataset('dataset/size_arr', data=np.array([self.col_count, self.has_titles]))
-        h5f.close()
 
     def read_csv_data(self, cols, c_size):
         if not self.has_titles:

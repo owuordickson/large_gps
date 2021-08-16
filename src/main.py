@@ -76,7 +76,7 @@ if __name__ == "__main__":
         wr_text = ("Run-time: " + str(end - start) + " seconds\n")
         wr_text += (Profile.get_quick_mem_use(snapshot) + "\n")
         wr_text += str(res_text)
-        f_name = str('res_aco' + str(end).replace('.', '', 1) + '.txt')
+        f_name = str('res_aco_v8' + str(end).replace('.', '', 1) + '.txt')
         Profile.write_file(wr_text, f_name)
         print(wr_text)
     elif algChoice == 'aco_h5':
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         wr_text = ("Run-time: " + str(end - start) + " seconds\n")
         wr_text += (Profile.get_quick_mem_use(snapshot) + "\n")
         wr_text += str(res_text)
-        f_name = str('res_ga' + str(end).replace('.', '', 1) + '.txt')
+        f_name = str('res_aco_v7' + str(end).replace('.', '', 1) + '.txt')
         Profile.write_file(wr_text, f_name)
         print(wr_text)
     else:
