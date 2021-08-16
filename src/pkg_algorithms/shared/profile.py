@@ -93,3 +93,9 @@ class Profile:
         total = sum(stat.size for stat in top_stats)
         wr_line += ("\n Total allocated size: %.1f KiB" % (total / 1024))
         return wr_line
+
+    @staticmethod
+    def write_file(data, path):
+        with open(path, 'w') as f:
+            f.write(data)
+            f.close()

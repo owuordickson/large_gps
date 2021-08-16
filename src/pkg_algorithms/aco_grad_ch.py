@@ -19,7 +19,7 @@ Changes
 import numpy as np
 from .shared.gp_v4 import GI, GP
 from .shared.dataset_v8 import Dataset
-from .shared.profile_mem import Profile
+from .shared.profile import Profile
 
 
 class GradACO:
@@ -314,7 +314,7 @@ class GradACO:
         return False
 
     @staticmethod
-    def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
+    def init_algorithm(f_path, min_supp, cores, chunk_size):
 
         try:
             if cores > 1:
