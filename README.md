@@ -23,8 +23,8 @@ $python3 src/main.py -a 'aco_ch' -f data/DATASET.csv -u 1
 ```
 
 where you specify the input parameters as follows:<br>
-* <strong>-f</strong> - [required] a file in csv format <br>
-* <strong>-u</strong> - [optional] chunk size ```default = 1``` <br>
+* <strong>-f</strong>: [required] a file in csv format <br>
+* <strong>-u</strong>: [optional] chunk size ```default = 1``` <br>
 
 ### License:
 * MIT
