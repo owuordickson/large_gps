@@ -17,8 +17,9 @@ Changes
 
 """
 import numpy as np
-from algorithms.common.gp_v4 import GI, GP
-from algorithms.common.dataset_v8 import Dataset
+from .shared.gp_v4 import GI, GP
+from .shared.dataset_v8 import Dataset
+from .shared.profile_mem import Profile
 
 
 class GradACO:
@@ -311,3 +312,41 @@ class GradACO:
                     set(pattern.inv_pattern()) == set(pat.get_pattern()):
                 return True
         return False
+
+    @staticmethod
+    def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
+
+        try:
+            if cores > 1:
+                num_cores = cores
+            else:
+                num_cores = Profile.get_num_cores()
+
+            ac = GradACO(f_path, chunk_size, min_supp)
+            list_gp = ac.run_ant_colony()
+
+            d_set = ac.d_set
+            wr_line = "Algorithm: ACO-GRAANK BD (v8.0)\n"
+            wr_line += "Minimum support: " + str(min_supp) + '\n'
+            wr_line += "No. of CPU cores: " + str(num_cores) + '\n'
+            wr_line += "No. of (dataset) attributes: " + str(d_set.col_count) + '\n'
+            wr_line += "No. of (dataset) objects: " + str(d_set.row_count) + '\n'
+            wr_line += "No. of (memory) chunk size: " + str(chunk_size) + '\n'
+            wr_line += "No. of (memory) used chunks: " + str(d_set.used_chunks) + '\n'
+            wr_line += "No. of (memory) skipped chunks: " + str(d_set.skipped_chunks) + '\n'
+            wr_line += "No. of (ACO) iterations: " + str(ac.iteration_count) + '\n'
+            wr_line += "No. of gradual patterns: " + str(len(list_gp)) + '\n\n'
+
+            wr_line += d_set.print_header()
+
+            wr_line += str("\nFile: " + f_path + '\n')
+            wr_line += str("\nPattern : Support" + '\n')
+
+            for gp in list_gp:
+                wr_line += (str(gp.to_string()) + ' : >= ' + str(gp.support) + '\n')
+
+            return wr_line
+        except Exception as error:
+            wr_line = "Failed: " + str(error)
+            print(error)
+            return wr_line

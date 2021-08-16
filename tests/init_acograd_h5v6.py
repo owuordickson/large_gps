@@ -20,7 +20,7 @@ Description:
 
 import sys
 from optparse import OptionParser
-# from common.profile_mem import Profile
+# from shared.profile_mem import Profile
 from tests.aco_grad_h5v6 import GradACO
 
 

@@ -20,7 +20,7 @@ Description:
 
 import sys
 from optparse import OptionParser
-from algorithms.ant_colony.aco_grad_v8 import GradACO
+from pkg_algorithms.aco_grad_ch import GradACO
 
 
 def init_algorithm(f_path, min_supp, cores, chunk_size=1000):
@@ -79,7 +79,7 @@ if __name__ == "__main__":
                              dest='file',
                              help='path to file containing csv',
                              # default=None,
-                             # default='../data/DATASET.csv',
+                             default='../data/DATASET.csv',
                              # default='../data/DATASET2.csv',
                              # default='../data/DATASET3.csv',
                              # default='../data/Omnidir.csv',
@@ -87,7 +87,7 @@ if __name__ == "__main__":
                              # default='../data/vehicle_silhouette_dataset.csv',
                              # default='../data/FARSmiss.csv',
                              # default='../data/c2k_02k.csv',
-                             default='../data/c2k.csv',
+                             # default='../data/c2k.csv',
                              # default='../data/Directio_site15k.csv',
                              # default='../data/UCI_household_power_consumption500k.csv',
                              type='string')
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     import time
     import tracemalloc
-    from algorithms.common.profile_mem import Profile
+    from pkg_algorithms.shared.profile_mem import Profile
 
     start = time.time()
     tracemalloc.start()
