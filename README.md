@@ -3,6 +3,29 @@ We implement a chunked layout for loading gradual patterns' binary matrices into
 
 * Owuor D.O., Laurent A. (2021) Efficiently Mining Large Gradual Patterns Using Chunked Storage Layout. In: Bellatreche L., Dumas M., Karras P., Matulevičius R. (eds) Advances in Databases and Information Systems. ADBIS 2021. Lecture Notes in Computer Science, vol 12843. Springer, Cham. https://doi.org/10.1007/978-3-030-82472-3_4
 
+### Requirements:
+You will be required to install the following python dependencies before using <em><strong>ACO</strong>-GRAANK</em> algorithm:<br>
+```
+                   install python (version => 3.6)
+
+```
+
+```
+                    $ pip3 install numpy pandas h5py~=3.3.0 python-dateutil~=2.8.1
+
+```
+
+### Usage:
+Use it a command line program with the local package to mine gradual patterns:
+
+```
+$python3 src/main.py -a 'aco_ch' -f data/DATASET.csv -u 1
+```
+
+where you specify the input parameters as follows:<br>
+* <strong>-f</strong> - [required] a file in csv format <br>
+* <strong>-u</strong> - [optional] chunk size ```default = 1``` <br>
+
 ### License:
 * MIT
 
